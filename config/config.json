@@ -49,7 +49,7 @@
   "images": {
     "folder": "images/",
     "showInPopup": true,
-    "showInHover": true
+    "showInHover": false
   },
 
   "sides": [
@@ -92,6 +92,8 @@
     "zoomWhenSiegeChosen": 8,
     "groupSiegesWithinKm": 0.6,
     "markerScale": 1.0,
+    "uniformSize": 12,
+    "sizeByLengthAtStart": false,
     "showRivers": true,
     "showCities": true,
     "showCitiesAtStart": true,
@@ -100,6 +102,7 @@
     "smallTownsFromZoom": 6.75,
     "townsFromZoom": 7.5,
     "siegeNamesFromZoom": 8,
+    "allSiegeNamesFromZoom": 9,
     "showCompass": true,
     "showTitleBox": true,
     "titleBox": { "title": "A Mapp of the Sieges", "subtitle": "IN THE LATE WARRES · MDCXL–MDCLIV" },

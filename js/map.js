@@ -67,17 +67,21 @@
   }
   const dotPx = r => Math.max(8, Math.round(r * 2));
 
-  // the key in the side panel, drawn with the same symbols
-  (() => {
+  // Circles start the same size; the "Size by length" switch scales them by days under siege
+  // (for several sieges at one place, by their combined length).
+  const UNIFORM_PX = Math.round((M.uniformSize || 12) * scale);
+  function renderKey(byLength) {
     const c0 = colour("s0"), c1 = colour("s1");
     const item = (sym, label) => `<div>${sym}<span>${label}</span></div>`;
-    $("sizeKey").innerHTML =
-      item(circleHTML([c0], dotPx(radius({ d: 1 }))), "1 day") +
-      item(circleHTML([c0], dotPx(radius({ d: 182 }))), "6 months") +
-      item(circleHTML([c0], dotPx(radius({ d: 730 }))), "2 years") +
-      item(circleHTML([c0], dotPx(5 * scale), true), "length unknown") +
-      item(`<span class="key-multi">${circleHTML([c1, c1, c0], 20)}<b>3</b></span>`, "several sieges");
-  })();
+    $("sizeKey").innerHTML = byLength
+      ? item(circleHTML([c0], dotPx(radius({ d: 1 }))), "1 day") +
+        item(circleHTML([c0], dotPx(radius({ d: 182 }))), "6 months") +
+        item(circleHTML([c0], dotPx(radius({ d: 730 }))), "2 years") +
+        item(circleHTML([c0], dotPx(5 * scale), true), "length unknown") +
+        item(`<span class="key-multi">${circleHTML([c1, c1, c0], 22)}<b>3</b></span>`, "several, combined")
+      : item(circleHTML([c0], UNIFORM_PX), "one siege") +
+        item(`<span class="key-multi">${circleHTML([c1, c1, c0], UNIFORM_PX)}<b>3</b></span>`, "several at one place");
+  }
   function fmtDays(d) {
     if (d.d == null) return d.dl || "length unknown";
     const n = d.d, ap = d.approx ? "c. " : "";
@@ -106,12 +110,17 @@
     if (fc) { fc.textContent = cap; fc.hidden = !cap; }
   };
 
+  function totalDays(members) { const k = members.filter(m => m.d != null); return k.length ? k.reduce((s, m) => s + m.d, 0) : null; }
+  function totalLabel(members) {
+    const n = totalDays(members);
+    return n == null ? "" : `, ${fmtDays({ d: Math.round(n), approx: members.some(m => m.approx) || members.some(m => m.d == null) })} in all`;
+  }
   function switcherHTML(members, i) {
     if (members.length < 2) return "";
     const places = new Set(members.map(m => m.p));
     const chips = members.map((m, j) => `<button type="button" data-i="${j}" aria-pressed="${j === i}"><i style="background:${colour(m.w)}"></i>${places.size > 1 ? esc(m.p.replace(/ Castle$/, "")) + " " : ""}${m.y || "undated"}</button>`).join("");
     return `<div class="here">
-      <div class="here-top"><span>${members.length} sieges at this spot · ${i + 1} of ${members.length}</span>
+      <div class="here-top"><span>${members.length} sieges at this spot${totalLabel(members)} · ${i + 1} of ${members.length}</span>
         <span class="nav"><button type="button" data-step="-1" aria-label="Previous siege here" ${i === 0 ? "disabled" : ""}>‹</button><button type="button" data-step="1" aria-label="Next siege here" ${i === members.length - 1 ? "disabled" : ""}>›</button></span></div>
       <div class="here-chips" role="group" aria-label="Sieges at this spot">${chips}</div>
     </div>`;
@@ -170,9 +179,9 @@
         if (!c.Name || !isFinite(lat) || !isFinite(lng)) return;
         const t = (c.Tier || "").trim().toLowerCase();
         const tier = ["capital", "major", "minor", "town"].includes(t) ? t : "town";
-        PLACES.push({ name: c.Name.trim(), lat, lng });
-        L.marker([lat, lng], { pane: "cities", interactive: false, keyboard: false,
-          icon: L.divIcon({ className: "", html: `<div class="city ${tier}"${c.Note ? ` title="${esc(c.Note)}"` : ""}>${esc(c.Name)}</div>`, iconSize: [0, 0] }) }).addTo(map);
+        const marker = L.marker([lat, lng], { pane: "cities", interactive: false, keyboard: false,
+          icon: L.divIcon({ className: "", html: `<div class="city ${tier}" data-place="${PLACES.length}"${c.Note ? ` title="${esc(c.Note)}"` : ""}>${esc(c.Name)}</div>`, iconSize: [0, 0] }) }).addTo(map);
+        PLACES.push({ name: c.Name.trim(), lat, lng, tier, marker });
       });
     } catch (e) { console.warn(e); }
   }
@@ -184,26 +193,53 @@
     el.classList.toggle("no-siege-names", z < (M.siegeNamesFromZoom ?? 8));
     scheduleDeclutter();
   };
-  // Where siege names would overlap, the longer siege keeps its name and the other is hidden until you zoom closer.
+  // Siege names: each tries below, above, right and left of its circle, avoiding other names and circles.
+  // Longer sieges choose first. A name that fits nowhere waits for a closer zoom; from allSiegeNamesFromZoom every name shows.
   let declutterQueued = false;
   function scheduleDeclutter() {
     if (declutterQueued) return;
     declutterQueued = true;
     requestAnimationFrame(() => { declutterQueued = false; declutter(); });
   }
+  const POSITIONS = ["pos-bottom", "pos-top", "pos-right", "pos-left"];
   function declutter() {
     const box = map.getContainer();
     if (box.classList.contains("no-siege-names")) return;
-    const els = [...box.querySelectorAll(".sg-name")];
-    els.forEach(el => { el.style.visibility = ""; });
-    const items = els.map(el => ({ el, size: el.parentElement.offsetWidth, r: el.getBoundingClientRect() }))
-      .filter(x => x.r.width)
-      .sort((a, b) => b.size - a.size);
+    const showAll = map.getZoom() >= (M.allSiegeNamesFromZoom ?? 9);
+    const view = box.getBoundingClientRect();
+    const items = [];
+    const dots = [];
+    box.querySelectorAll(".city.gives-way").forEach(el => el.classList.remove("gives-way"));
+    box.querySelectorAll(".sg-name").forEach(el => {
+      el.classList.remove(...POSITIONS); el.classList.add("pos-bottom");
+      const dot = el.parentElement.getBoundingClientRect();
+      if (dot.right < view.left || dot.left > view.right || dot.bottom < view.top || dot.top > view.bottom) { el.style.visibility = ""; return; }
+      dots.push(dot);
+      if (el.dataset.dup) el.dataset.dup.split(",").forEach(i => box.querySelector(`.city[data-place="${i}"]`)?.classList.add("gives-way"));
+      const r = el.getBoundingClientRect();
+      items.push({ el, dot, w: r.width, h: r.height, pri: +el.dataset.pri || 0 });
+    });
+    items.sort((a, b) => b.pri - a.pri);
     const placed = [];
-    const hits = (a, b) => a.left < b.right + 3 && a.right + 3 > b.left && a.top < b.bottom + 1 && a.bottom + 1 > b.top;
+    const hits = (a, b) => a.left < b.right + 2 && a.right + 2 > b.left && a.top < b.bottom + 1 && a.bottom + 1 > b.top;
+    const free = r => !placed.some(p => hits(r, p)) && !dots.some(d => hits(r, d));
     items.forEach(x => {
-      if (placed.some(p => hits(x.r, p))) x.el.style.visibility = "hidden";
-      else placed.push(x.r);
+      const { dot: d, w, h } = x, cx = (d.left + d.right) / 2, cy = (d.top + d.bottom) / 2;
+      const cand = {
+        "pos-bottom": { left: cx - w / 2, right: cx + w / 2, top: d.bottom + 2, bottom: d.bottom + 2 + h },
+        "pos-top": { left: cx - w / 2, right: cx + w / 2, top: d.top - 2 - h, bottom: d.top - 2 },
+        "pos-right": { left: d.right + 4, right: d.right + 4 + w, top: cy - h / 2, bottom: cy + h / 2 },
+        "pos-left": { left: d.left - 4 - w, right: d.left - 4, top: cy - h / 2, bottom: cy + h / 2 }
+      };
+      const pos = POSITIONS.find(p => free(cand[p]));
+      if (pos || showAll) {
+        // when every name must show, take the position that overlaps least
+        const overlap = r => [...placed, ...dots].reduce((s, o) => s + Math.max(0, Math.min(r.right, o.right) - Math.max(r.left, o.left)) * Math.max(0, Math.min(r.bottom, o.bottom) - Math.max(r.top, o.top)), 0);
+        const use = pos || POSITIONS.reduce((best, p) => overlap(cand[p]) < overlap(cand[best]) ? p : best, "pos-bottom");
+        x.el.classList.remove("pos-bottom"); x.el.classList.add(use);
+        x.el.style.visibility = "";
+        placed.push(cand[use]);
+      } else x.el.style.visibility = "hidden";
     });
   }
   map.on("zoomend", zoomClasses); map.on("moveend", scheduleDeclutter); zoomClasses();
@@ -222,7 +258,7 @@
           map.getContainer().classList.toggle("cities-off", !cities.checked);
           map.getContainer().classList.toggle("towns-off", !towns.checked);
         };
-        cities.addEventListener("change", apply); towns.addEventListener("change", apply); setTimeout(apply);
+        cities.addEventListener("change", () => { apply(); scheduleDeclutter(); }); towns.addEventListener("change", () => { apply(); scheduleDeclutter(); }); setTimeout(apply);
         return div;
       }
     });
@@ -243,22 +279,25 @@
   });
 
   function iconFor(members) {
-    const known = members.filter(m => m.d != null);
-    const r = known.length ? Math.max(...known.map(radius)) : 5 * scale;
-    const size = dotPx(r), multi = members.length > 1;
-    const unknown = !known.length && !multi;
+    const multi = members.length > 1, total = totalDays(members);
+    let size, unknown = false;
+    if (state.sizeByLength) {
+      unknown = total == null && !multi;
+      size = dotPx(total == null ? 5 * scale : radius({ d: total }));
+    } else size = UNIFORM_PX;
     const sym = circleHTML(members.map(m => colour(m.w)), size, unknown);
-    const name = siegeName(members);
+    const { text, dup } = siegeName(members);
     return { r: size / 2, icon: L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -size / 2],
-      html: `<div class="sg siege${multi ? " multi" : ""}" style="width:${size}px;height:${size}px">${sym}${multi ? `<span class="badge">${members.length}</span>` : ""}${name ? `<span class="sg-name">${esc(name)}</span>` : ""}</div>` }) };
+      html: `<div class="sg siege${multi ? " multi" : ""}" style="width:${size}px;height:${size}px">${sym}${multi ? `<span class="badge">${members.length}</span>` : ""}<span class="sg-name" data-pri="${total ?? 0}"${dup ? ` data-dup="${dup}"` : ""}>${esc(text)}</span></div>` }) };
   }
 
-  // The name shown under a siege marker once zoomed in. Left out when a town label with the same name sits within 8 km.
+  // The name shown by a siege once zoomed in. A city or town of the same name within 8 km gives way to it,
+  // so the name appears once, in the siege's style.
   const norm = s => s.toLowerCase().replace(/[^a-z]/g, "");
   function siegeName(members) {
     const names = [...new Set(members.map(m => m.p))];
-    const shown = names.filter(n => !PLACES.some(t => norm(t.name) === norm(n) && km(t, members[0]) < 8));
-    return shown.join(" & ");
+    const dup = names.map(n => PLACES.findIndex(t => norm(t.name) === norm(n) && km(t, members[0]) < 8)).filter(i => i >= 0);
+    return { text: names.join(" & "), dup: dup.join(",") };
   }
 
   GROUPS.forEach(g => {
@@ -291,14 +330,14 @@
     GROUPS.forEach(g => {
       g.vis = g.all.filter(d => ids.has(d));
       if (!g.vis.length) { layer.removeLayer(g.marker); return; }
-      const sig = g.vis.map(d => d.id).join("|");
+      const sig = (state.sizeByLength ? "L|" : "U|") + g.vis.map(d => d.id).join("|");
       if (sig !== g.sig) {
         g.sig = sig;
         const { r, icon } = iconFor(g.vis);
         g.marker.setIcon(icon);
         const names = [...new Set(g.vis.map(d => d.p))].join(" & ");
         const title = g.vis.length > 1 ? `${names}: ${g.vis.length} sieges` : `${names}, ${g.vis[0].y || "undated"}`;
-        const pic = IMG.showInHover !== false ? g.vis.find(d => d.images.length) : null;
+        const pic = IMG.showInHover === true ? g.vis.find(d => d.images.length) : null;   // off unless switched on in settings
         g.marker.unbindTooltip().bindTooltip(esc(title) + (pic ? imgTag(pic, "tip-img", false) : ""), { className: "tip", direction: "top", offset: [0, -r] });
         g.marker.setZIndexOffset(-Math.round(r * 20));
         if (g.marker.isPopupOpen()) showInPopup(g, Math.min(g.pick || 0, g.vis.length - 1));
@@ -311,7 +350,11 @@
   }
 
   /* ---------- controls ---------- */
-  const state = { year: null, sides: new Set(SIDES.map(s => s.key)), sort: (cfg.list || {}).defaultSort || "long", story: null, q: "", showAll: false };
+  const state = { year: null, sides: new Set(SIDES.map(s => s.key)), sort: (cfg.list || {}).defaultSort || "long", story: null, q: "", showAll: false, sizeByLength: M.sizeByLengthAtStart === true };
+  const sizeToggle = $("sizeToggle");
+  sizeToggle.checked = state.sizeByLength;
+  renderKey(state.sizeByLength);
+  sizeToggle.addEventListener("change", () => { state.sizeByLength = sizeToggle.checked; renderKey(state.sizeByLength); render(); });
 
   const storiesEl = $("stories");
   [{ value: null, label: "All sieges" }, ...STORIES].forEach(s => {

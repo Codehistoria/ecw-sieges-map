@@ -37,7 +37,7 @@ If a column heading in the spreadsheet changes, change it here instead of in the
 |---|---|
 | `folder` | Where the photos are. Default `images/`. |
 | `showInPopup` | `true` or `false`: photo at the top of the pop-up. |
-| `showInHover` | `true` or `false`: small photo in the hover label. |
+| `showInHover` | `true` or `false`: small photo in the hover label. Off by default, because loading a photo for every label slows the map. |
 
 ## `sides`
 
@@ -68,12 +68,15 @@ The story buttons (the old story-map tabs). `value` matches the spreadsheet's Th
 | `zoomWhenSiegeChosen` | How close the map flies in when you pick a siege from the list. |
 | `groupSiegesWithinKm` | Sieges closer than this share one marker with a counter. `0` turns grouping off. |
 | `markerScale` | Make all circles bigger (`1.3`) or smaller (`0.8`). |
+| `uniformSize` | Size of every circle, in pixels, while "Size circles by length of siege" is off. |
+| `sizeByLengthAtStart` | `true` starts with circles sized by length. With several sieges at one place, the circle reflects their combined length. |
 | `showRivers`, `showCities`, `showCompass`, `showTitleBox` | `true` or `false`. |
 | `showCitiesAtStart` | Whether the "Cities" switch on the map starts on (`true`) or off (`false`). Cities are the `capital`, `major` and `minor` tiers in `data/cities.csv`. |
 | `showTownsAtStart` | Whether the "Towns" switch starts on or off. Towns are the `town` tier. |
 | `fadeTownsWhenFiltered` | `true` fades the city and town names while a story or year is chosen, so the chosen sieges stand alone. |
 | `smallTownsFromZoom` | Zoom level at which "minor" cities appear. |
 | `townsFromZoom` | Zoom level at which the 17th-century market towns (tier `town`) appear. |
+| `allSiegeNamesFromZoom` | From this zoom every siege name shows, even where names crowd. Below it, a name that can't find a clear spot waits for a closer zoom. |
 | `siegeNamesFromZoom` | Zoom level at which each siege's name appears under its circle. A siege name is left out when a town of the same name is labelled right there. |
 | `titleBox` | The cartouche in the bottom-left corner: `title` and `subtitle`. |
 | `labels` | Sea and country names: `text`, `lat`, `lng`, and `style` (`"sea"` for italic, `"country"` for spaced capitals). |
