@@ -31,7 +31,6 @@ ID,Place,Column,Issue,What was done,Status
 181.3,Oxford,MAP Outcome,"Possible error (spot-check): Outcome says Royalists, but Oxford surrendered to Fairfax in June 1646 (row is also tagged Parliamentarian Best)",Left as is: please check,Needs checking
 178,Nunney Castle,MAP Outcome,"Possible error (spot-check): Outcome says Royalists, but the text says Colonel Prater surrendered Nunney Castle",Left as is: please check,Needs checking
 245,Warwick Castle,MAP Outcome,"Possible error (spot-check): Outcome says Royalists, but the text says the siege ended as Parliament's relief force approached",Left as is: please check,Needs checking
-138.1,Leicester,Start/End Date,"Possible error (spot-check): Dated May 1644; Rupert stormed Leicester on 30–31 May 1645, a fortnight before Naseby (the text mentions events of late 1644 as before the siege)",Left as is: please check,Needs checking
 24,Bideford,Latitude/Longitude,Marker is 3 km from the centre of Bideford; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
 94,Grantham,Latitude/Longitude,Marker is 4 km from the centre of Grantham; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
 107,Hereford,Latitude/Longitude,Marker is 5 km from the centre of Hereford; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
@@ -53,3 +52,14 @@ ID,Place,Column,Issue,What was done,Status
 252,Wigan,Latitude/Longitude,Marker is 6 km from the centre of Wigan; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
 263,Worcester,Latitude/Longitude,Marker is 4 km from the centre of Worcester; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
 266,York,Latitude/Longitude,Marker is 4 km from the centre of York; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+,Whole file,Tags,"New Tags column added to drive the story tours (how sieges ended, campaigns, commanders, themes). Each tag was assigned by reading the write-up; tags are a judgement and worth a read-through.",Added; stories are described in data/stories.csv,Needs checking
+138.1,Leicester,Start Date / End Date,"Dated 1644, but Rupert stormed Leicester in May 1645 (the write-up and row 138.2 both say so).",Changed to 1645/5/29 – 1645/5/30,Fixed in data/sieges.csv
+68.1 / 68.2,Corfe Castle,Body Text,"Both rows carry the same write-up, which describes the 1646 siege. The 1643 siege (68.1) needs its own text.",Left as is,Needs checking
+31,Bolsover,Start Date,"Dated August 1643, but the write-up places the surrender after Marston Moor (July 1644).",Left as is; tagged After Marston Moor from the text,Needs checking
+120,Huntingdon,Body Text,"Write-up says ""In August 1644, after their defeat at the Battle of Naseby"" – Naseby was June 1645, and the row is dated August 1645.",Left as is,Needs checking
+171,Newcastle Emlyn Castle,End Date,"Ends 23 April 1645, but the write-up says ""Following the Battle of Naseby"" (June 1645).",Left as is; not tagged After Naseby,Needs checking
+150,Lowestoft,MAP Outcome,"Outcome is Royalists, but the write-up says Cromwell seized the port and secured it for Parliament.",Left as is,Needs checking
+19,Berwick upon Tweed,MAP Outcome,"Outcome is Royalists, but the write-up describes the attack being resisted.",Left as is,Needs checking
+265,Wythenshawe Hall,MAP Attacker / MAP Defender / MAP Outcome,"Attacker, defender and outcome look reversed: the write-up has Parliament's Captain Adams besieging Robert Tatton's Royalist house and taking it (Tatton later bought it back).",Left as is,Needs checking
+196,Restormel Castle,MAP Attacker / MAP Outcome,"Sir Richard Grenville was a Royalist commander in August 1644, when he took Restormel from the Earl of Essex's Parliamentarian garrison. The write-up and the attacker/outcome (Parliamentarians) seem to have the sides the wrong way round.",Left as is,Needs checking
+183.1,Pembroke,MAP Outcome,"Outcome is Royalists, but the write-up says Pembroke survived the 1644 sieges and stayed in Parliament's hands.",Left as is,Needs checking

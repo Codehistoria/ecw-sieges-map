@@ -14,6 +14,8 @@ config/
   README.md             what every setting does
 data/
   sieges.csv            THE SPREADSHEET: one row per siege
+  stories.csv           the stories: title, group, summary, the account that links the sieges, tour order
+  known-issues.csv      problems found by reading the data against the history (shown on the checker)
   cities.csv            towns and cities of the 1640s shown on the map
   basemap/
     coastline.geojson   coastline of Britain and Ireland (Natural Earth)
@@ -44,7 +46,8 @@ js/vendor/              Leaflet and PapaParse (third-party libraries; leave alon
 | Start Date, End Date | Year first, as `1644/7/2`. Leave out what isn't known: `1644/7/` or `1644//`. Day-first `2/7/1644` also works. |
 | Duration | `76 days`, `30 days (approx)`, or `Multiple Sieges`. If it's empty and both dates are complete, the map works the length out. |
 | MAP Attacker, MAP Defender, MAP Outcome | One of the sides listed in the settings: `Parliamentarians`, `Royalists` or `Scots`. |
-| Themes | One of the story names (`Longest`, `Bloodiest`, `Women`, `Must Read`, `Royalist Best`, `Parliamentarian Best`) or a side. |
+| Themes | One of the featured stories (`Longest`, `Bloodiest`, `Women`, `Must Read`, `Royalist Best`, `Parliamentarian Best`) or a side. |
+| Tags | The other stories this siege belongs to, separated by semicolons, e.g. `Stormed; Newark's ring; Oliver Cromwell`. Each tag must match a Tag in `data/stories.csv`. |
 | Headline, Body Text | The pop-up's text. Line breaks in Body Text become paragraphs. |
 | Website | A link to the site, if there is one. |
 | Image 1, Caption Image 1 | The photo's file name and its caption with the credit. |
@@ -52,6 +55,25 @@ js/vendor/              Leaflet and PapaParse (third-party libraries; leave alon
 | Latitude, Longitude | Decimal degrees, e.g. `53.0762`, `-0.8082`. |
 
 A row with no dates, no sides and no outcome (like the "London" introduction row) is left off the map.
+
+## Stories
+
+A story picks out sieges that share a thread: how they ended (stormed, starved out, relieved…), a campaign or place (Newark's outposts, after Naseby, ports and the sea…), a commander's trail, or a theme (churches, family homes, turncoats, townspeople). On the map, choosing a story filters the sieges, shows an account of what connects them, and offers **Follow the story**, a tour that visits each siege in turn and says how far, in which direction and how long after the previous one it was. Commanders' stories also draw their route on the map. A story can be linked to directly: the address ends `#story-` and the tag, e.g. `index.html#story-newark-s-ring`.
+
+Stories live in `data/stories.csv`, one row each:
+
+| Column | What goes in it |
+|---|---|
+| Tag | The word or phrase used in the spreadsheet's Tags (or Themes) column. Must match exactly. |
+| Group | Which tab the story sits under: `Featured`, `How sieges ended`, `Campaigns and places`, `Commanders`, `The war at home`. A new name makes a new tab. |
+| Title | The story's name on its button and panel. |
+| Summary | One sentence, shown in italics and when hovering the button. |
+| Story | The account that connects the sieges. Leave a blank line between paragraphs. |
+| Order | How the tour runs: `date` (oldest first), `length` (longest first) or `route` (date order, with a line drawn between the sieges). |
+
+To add a siege to a story, add the story's Tag to that row's Tags column. To make a new story, add a row to `stories.csv` and tag the sieges. The checker lists stories with no sieges and tags that match no story (usually a spelling slip).
+
+The tags were assigned by reading each write-up, so they are a judgement worth checking; `data/known-issues.csv` notes this.
 
 ## Adding photos
 

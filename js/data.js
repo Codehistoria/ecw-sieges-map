@@ -34,6 +34,28 @@
     return out;
   }
 
+  /* Stories: read from data/stories.csv (one row per story) if the settings name it, otherwise from the
+     "stories" list in the settings file. Each story is { value, label, group, summary, story, order }. */
+  async function loadStories(cfg) {
+    const fromSettings = () => (cfg.stories || []).map(s => ({ value: s.value, label: s.label || s.value, group: s.group || "", summary: s.summary || "", story: s.story || "", order: s.sort || "date" }));
+    if (!cfg.data || !cfg.data.stories) return { stories: fromSettings(), problems: [] };
+    const { text } = await fetchText(cfg.data.stories, "auto");
+    const rows = parseCSV(text).data, problems = [], seen = new Set();
+    const orders = { date: "date", route: "route", long: "long", length: "long", longest: "long" };
+    const stories = [];
+    rows.forEach((r, i) => {
+      const value = String(r.Tag || "").trim();
+      if (!value) return;
+      const note = (field, message) => problems.push({ row: i + 2, id: value, place: r.Title || value, field, message });
+      if (seen.has(value)) note("Tag", "This tag appears twice in stories.csv; only the first row is used");
+      seen.add(value);
+      const o = String(r.Order || "date").trim().toLowerCase();
+      if (!orders[o]) note("Order", `"${r.Order}" isn't an order; use date, length or route`);
+      stories.push({ value, label: String(r.Title || value).trim(), group: String(r.Group || "").trim(), summary: String(r.Summary || "").trim(), story: String(r.Story || "").trim(), order: orders[o] || "date" });
+    });
+    return { stories, problems };
+  }
+
   // Dates: "1644/7/2", "1644/7/", "1644//", "1644-07-02", "2/7/1644", "1644". Returns [y, m, d] with nulls, or null if unreadable.
   function parseDate(raw, format) {
     const s = String(raw || "").trim();
@@ -77,6 +99,7 @@
     const sideByValue = {};
     (cfg.sides || []).forEach((s, i) => { sideByValue[s.value.trim().toLowerCase()] = "s" + i; });
     const storyValues = new Set((cfg.stories || []).map(s => s.value));
+    const storySource = cfg.data && cfg.data.stories ? "data/stories.csv" : "the settings file";
     const records = [], skipped = [], problems = [];
     const seenIds = new Map();
     const get = (r, key) => (C[key] && r[C[key]] != null ? String(r[C[key]]) : "");
@@ -141,7 +164,9 @@
       };
       const story = get(r, "story").trim();
       if (story && !storyValues.has(story) && !(cfg.sides || []).some(sd => sd.value === story))
-        note("Themes", `"${story}" isn't a story in the settings file, so it has no button`);
+        note("Themes", `"${story}" isn't a story in ${storySource}, so it has no button`);
+      const tags = get(r, "tags").split(/[;\n]/).map(t => t.trim()).filter(Boolean);
+      tags.filter(t => !storyValues.has(t)).forEach(t => note("Tags", `"${t}" isn't a story in ${storySource}; check the spelling, or add a row for it`));
       const body = get(r, "body");
       if (/\w\?\w/.test(body + get(r, "headline")))
         note("Text", "Has '?' inside words: the file may have been saved without UTF-8, which turns apostrophes and quote marks into '?'");
@@ -152,7 +177,7 @@
         s: iso(s), e: iso(e), y: s[0] || e[0] || null,
         d: days, dl: durLabel, approx: !!dur.approx,
         a: side(a, "MAP Attacker"), f: side(f, "MAP Defender"), w: side(w, "MAP Outcome"),
-        t: story, h: get(r, "headline").trim(), b: body.trim(), u: get(r, "website").trim(),
+        t: story, tags, h: get(r, "headline").trim(), b: body.trim(), u: get(r, "website").trim(),
         images: [[img1, get(r, "caption")], [img2, get(r, "caption2")]].filter(x => x[0] && x[0].trim()).map(x => ({ file: x[0], caption: x[1].trim() })),
         lat, lng
       });
@@ -180,5 +205,5 @@
     return `${fmtOne(s)} – ${fmtOne(e)}`;
   }
 
-  window.SiegeData = { fetchText, loadConfig, parseCSV, buildRecords, imageURL, fmtOne, fmtRange, parseDate };
+  window.SiegeData = { fetchText, loadConfig, loadStories, parseCSV, buildRecords, imageURL, fmtOne, fmtRange, parseDate };
 })();

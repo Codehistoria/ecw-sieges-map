@@ -22,9 +22,12 @@
 
     <div class="stats" id="stats" aria-live="polite"><span>Loading the sieges…</span></div>
 
-    <section>
+    <section class="stories-sec">
       <h2 class="section-label">Stories</h2>
+      <p class="explain" id="storiesIntro"></p>
+      <div class="story-groups" id="storyGroups" role="group" aria-label="Kinds of story"></div>
       <div class="stories" id="stories" role="group" aria-label="Choose a story"></div>
+      <article class="story-card" id="storyCard" aria-live="polite" hidden></article>
     </section>
 
     <section>
@@ -77,6 +80,14 @@
     </svg>
     <div class="cartouche" id="cartouche"><div class="t"></div><div class="s"></div></div>
     <div class="notice" id="notice" hidden></div>
+    <div class="tour" id="tour" role="region" aria-label="Story tour" hidden>
+      <div class="tour-top"><span class="tour-title"></span><span class="tour-step"></span><button type="button" class="tour-x" id="tourClose" aria-label="End the tour">×</button></div>
+      <p class="tour-leg" aria-live="polite"></p>
+      <div class="tour-place"></div>
+      <div class="tour-when"></div>
+      <p class="tour-head"></p>
+      <div class="tour-nav"><button type="button" id="tourPrev"><span aria-hidden="true">‹</span> Previous</button><button type="button" id="tourRead">Read the full account</button><button type="button" id="tourNext">Next <span aria-hidden="true">›</span></button></div>
+    </div>
   </div>
 </div>
 

@@ -2,7 +2,7 @@
    Reads config/config.json and data/sieges.csv each time it loads, so changes to either show on the next refresh. */
 (async function () {
   "use strict";
-  const { loadConfig, fetchText, parseCSV, buildRecords, imageURL, fmtOne, fmtRange } = window.SiegeData;
+  const { loadConfig, loadStories, fetchText, parseCSV, buildRecords, imageURL, fmtOne, fmtRange } = window.SiegeData;
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -16,9 +16,11 @@
   let cfg, DATA;
   try {
     cfg = await loadConfig();
+    try { cfg.stories = (await loadStories(cfg)).stories; }
+    catch (e) { console.warn("Stories file couldn't be read; using the settings file's list.", e); cfg.data.stories = null; cfg.stories = (await loadStories(cfg)).stories; }
     const { text } = await fetchText(cfg.data.sieges, cfg.data.encoding);
     const parsed = parseCSV(text);
-    const missing = Object.entries(cfg.columns).filter(([k, col]) => !["image2", "caption2", "website", "story", "duration", "caption"].includes(k) && !parsed.meta.fields.includes(col));
+    const missing = Object.entries(cfg.columns).filter(([k, col]) => !["image2", "caption2", "website", "story", "tags", "duration", "caption"].includes(k) && !parsed.meta.fields.includes(col));
     if (missing.length) throw new Error(`The spreadsheet has no column called ${missing.map(m => `"${m[1]}"`).join(", ")}. Rename the column, or change "columns" in config/config.json.`);
     DATA = buildRecords(parsed.data, cfg).records;
   } catch (e) { showNotice(e.message); console.error(e); return; }
@@ -28,7 +30,8 @@
   const SIDE = Object.fromEntries(SIDES.map(s => [s.key, s]));
   const colour = k => (SIDE[k] && SIDE[k].colour) || "#777777";
   const STORIES = cfg.stories || [];
-  const STORY_VALUES = STORIES.map(s => s.value);
+  const STORY = Object.fromEntries(STORIES.map(s => [s.value, s]));
+  const inStory = (d, v) => d.t === v || (d.tags || []).includes(v);
   const Y0 = cfg.years.from, Y1 = cfg.years.to;
   const YEARS = Array.from({ length: Y1 - Y0 + 1 }, (_, i) => Y0 + i);
 
@@ -127,7 +130,8 @@
   }
 
   function popupHTML(d, members, i) {
-    const story = STORY_VALUES.includes(d.t) ? `<span class="story">${esc((STORIES.find(s => s.value === d.t) || {}).label || d.t)}</span>` : "";
+    const mine = STORIES.filter(s => inStory(d, s.value));
+    const stories = mine.length ? `<div class="in-stories"><span class="lab">In the stories</span>${mine.map(s => `<button type="button" data-story="${esc(s.value)}" aria-pressed="${state.story === s.value}">${esc(s.label)}</button>`).join("")}</div>` : "";
     const out = d.w ? `<span class="pill" style="color:${colour(d.w)}"><i></i>${esc(SIDE[d.w].label)} prevailed</span>` : "";
     const sides = d.a && d.f ? `<span class="sides">${esc(SIDE[d.a].plural || SIDE[d.a].label)} besieged ${esc(SIDE[d.f].plural || SIDE[d.f].label)}</span>` : "";
     const body = (d.b || "").split(/\n+/).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join("");
@@ -142,12 +146,13 @@
       ${switcherHTML(members, i)}
       <div class="when">${esc(fmtRange(d.s, d.e))}${dur}</div>
       ${sides}
-      <div class="tags">${out}${story}</div>
+      <div class="tags">${out}</div>
       <div class="read">
         ${d.h ? `<p class="headline">${esc(d.h)}</p>` : ""}
         ${body ? `<div class="body" tabindex="0" aria-label="Full account">${body}</div>` : ""}
       </div>
       ${site}
+      ${stories}
     </div>`;
   }
 
@@ -265,7 +270,7 @@
     map.addControl(new PlaceSwitch());
   }
   map.on("popupopen", () => document.querySelector(".plate").classList.add("popup-open"));
-  map.on("popupclose", () => document.querySelector(".plate").classList.remove("popup-open"));
+  map.on("popupclose", () => { document.querySelector(".plate").classList.remove("popup-open"); $("tour").classList.remove("compact"); });
 
   /* Sieges close together share one marker: a pie of their outcomes with a count; the pop-up steps between them. */
   const layer = L.layerGroup().addTo(map);
@@ -318,6 +323,7 @@
     el.addEventListener("click", e => {
       e.stopPropagation();
       const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.story) { selectStory(b.dataset.story === state.story ? null : b.dataset.story, false); return; }
       if (b.dataset.i != null) showInPopup(g, +b.dataset.i, true);
       else if (b.dataset.step) showInPopup(g, g.pick + +b.dataset.step, true);
     });
@@ -356,19 +362,189 @@
   renderKey(state.sizeByLength);
   sizeToggle.addEventListener("change", () => { state.sizeByLength = sizeToggle.checked; renderKey(state.sizeByLength); render(); });
 
-  const storiesEl = $("stories");
-  [{ value: null, label: "All sieges" }, ...STORIES].forEach(s => {
-    const b = document.createElement("button");
-    const n = s.value ? DATA.filter(d => d.t === s.value).length : DATA.length;
-    b.className = "chip"; b.setAttribute("aria-pressed", String(s.value === null));
-    b.innerHTML = `${esc(s.label)} <span class="ct">${n}</span>`;
-    b.onclick = () => {
-      state.story = s.value; state.showAll = false;
-      storiesEl.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-      if (s.sort) setSort(s.sort);
-      render(true);
-    };
-    storiesEl.appendChild(b);
+  /* ---------- stories ----------
+     A story is a set of sieges sharing a thread (a tag in the spreadsheet's Tags or Themes column).
+     Choosing one filters the map, shows its account in the side panel, and offers a tour that visits
+     each siege in turn, saying how far and how long it was from the one before. */
+  const storiesEl = $("stories"), groupsEl = $("storyGroups"), card = $("storyCard");
+  $("storiesIntro").textContent = T.storiesIntro || "";
+  const slug = v => v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const storyCount = v => DATA.filter(d => inStory(d, v)).length;
+  const GROUPS_ORDER = [...new Set(STORIES.map(s => s.group || ""))];
+  let openGroup = GROUPS_ORDER[0];
+  function drawGroups() {
+    groupsEl.hidden = GROUPS_ORDER.length < 2;
+    groupsEl.innerHTML = GROUPS_ORDER.map(g => `<button type="button" data-group="${esc(g)}" aria-pressed="${g === openGroup}">${esc(g || "Other")}</button>`).join("");
+    storiesEl.innerHTML = "";
+    STORIES.filter(s => (s.group || "") === openGroup).forEach(s => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.dataset.story = s.value;
+      b.setAttribute("aria-pressed", String(state.story === s.value));
+      if (s.summary) b.title = s.summary;
+      b.innerHTML = `${esc(s.label)} <span class="ct">${storyCount(s.value)}</span>`;
+      b.onclick = () => selectStory(state.story === s.value ? null : s.value, true);
+      storiesEl.appendChild(b);
+    });
+  }
+  groupsEl.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; openGroup = b.dataset.group; drawGroups(); });
+
+  // Sieges in story order: by date (undated last), or longest first for "length" stories.
+  const byDate = (a, b) => (a.s || a.e ? 0 : 1) - (b.s || b.e ? 0 : 1) || sortKey(a).localeCompare(sortKey(b));
+  const storySeq = v => visible().filter(d => inStory(d, v)).sort(STORY[v] && STORY[v].order === "long" ? (a, b) => (b.d ?? -1) - (a.d ?? -1) : byDate);
+
+  function selectStory(v, fit) {
+    endTour();
+    state.story = v; state.showAll = false;
+    const st = v && STORY[v];
+    if (st && (st.group || "") !== openGroup) openGroup = st.group || "";
+    drawGroups();
+    if (st) setSort(st.order === "long" ? "long" : "date");
+    try { history.replaceState(null, "", v ? "#story-" + slug(v) : location.pathname + location.search); } catch (e) {}
+    render(fit);
+  }
+
+  function drawCard() {
+    const st = state.story && STORY[state.story];
+    card.hidden = !st;
+    if (!st) return;
+    const all = DATA.filter(d => inStory(d, st.value)), shown = storySeq(st.value);
+    const yrs = all.map(d => d.y).filter(Boolean), y0 = Math.min(...yrs), y1 = Math.max(...yrs);
+    const span = yrs.length ? (y0 === y1 ? ` · ${y0}` : ` · ${y0}–${y1}`) : "";
+    const filtered = shown.length < all.length ? ` <span class="fewer">(${shown.length} with your filters)</span>` : "";
+    card.innerHTML = `
+      ${st.group ? `<div class="sc-group">${esc(st.group)}</div>` : ""}
+      <h3>${esc(st.label)}</h3>
+      <div class="sc-meta">${all.length} siege${all.length === 1 ? "" : "s"}${span}${filtered}</div>
+      ${st.summary ? `<p class="sc-sum">${esc(st.summary)}</p>` : ""}
+      ${st.story ? `<div class="sc-story">${st.story.split(/\n\s*\n/).map(p => `<p>${esc(p.trim())}</p>`).join("")}</div>` : ""}
+      <div class="sc-actions">
+        <button type="button" class="chip go" id="tourStart"${shown.length ? "" : " disabled"}>Follow the story <span aria-hidden="true">▸</span></button>
+        <button type="button" class="chip" id="storyClear">Show all sieges</button>
+      </div>
+      <p class="sc-how">${st.order === "long" ? "The tour goes from the longest siege to the shortest." : st.order === "route" ? "The line on the map joins the sieges in date order; the tour follows it." : "The tour visits the sieges in date order."}</p>`;
+    $("tourStart").onclick = () => startTour();
+    $("storyClear").onclick = () => selectStory(null, false);
+  }
+
+  /* the route line (for "route" stories) and the leg just travelled on a tour */
+  const routeLayer = L.layerGroup().addTo(map);
+  function drawRoute() {
+    routeLayer.clearLayers();
+    const st = state.story && STORY[state.story];
+    if (st && st.order === "route") {
+      const pts = storySeq(st.value).filter(d => d.s || d.e).map(d => [d.lat, d.lng]);
+      if (pts.length > 1) L.polyline(pts, { color: col.ink || "#2a2017", weight: 1.6, opacity: .55, dashArray: "5 6", interactive: false }).addTo(routeLayer);
+    }
+    if (tour && tour.i > 0) {
+      const a = tour.list[tour.i - 1], b = tour.list[tour.i];
+      if (km(a, b) > 1) L.polyline([[a.lat, a.lng], [b.lat, b.lng]], { color: "#9a1c2c", weight: 3, opacity: .85, dashArray: "8 6", interactive: false }).addTo(routeLayer);
+    }
+    if (tour) {
+      const d = tour.list[tour.i];
+      L.circleMarker([d.lat, d.lng], { radius: 17, color: "#9a1c2c", weight: 2.5, fill: false, interactive: false, className: "tour-ring" }).addTo(routeLayer);
+    }
+  }
+
+  // "From Hougham House: 3 months later, 15 miles to the south-west."
+  const ymd = iso => (iso || "").split("-").map(Number);
+  function gapText(a, b) {
+    const A = ymd(a.s || a.e), B = ymd(b.s || b.e);
+    if (!A[0] || !B[0]) return "";
+    if (A[1] && A[2] && B[1] && B[2]) {
+      const days = Math.round((Date.UTC(B[0], B[1] - 1, B[2]) - Date.UTC(A[0], A[1] - 1, A[2])) / 864e5);
+      if (days < 0) return "";
+      if (days === 0) return "the same day";
+      if (days < 45) return `${days} day${days === 1 ? "" : "s"} later`;
+    }
+    if (A[1] && B[1]) {
+      const m = (B[0] - A[0]) * 12 + (B[1] - A[1]);
+      if (m < 0) return "";
+      if (m === 0) return "the same month";
+      if (m < 18) return `${m} month${m === 1 ? "" : "s"} later`;
+      return `${Math.round(m / 12)} years later`;
+    }
+    const y = B[0] - A[0];
+    return y < 0 ? "" : y === 0 ? "the same year" : `${y} year${y === 1 ? "" : "s"} later`;
+  }
+  const DIRS = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"];
+  function legText(a, b) {
+    const k = km(a, b), miles = Math.round(k * 0.621);
+    const dy = b.lat - a.lat, dx = (b.lng - a.lng) * Math.cos(a.lat * Math.PI / 180);
+    const dir = DIRS[Math.round(((Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360) / 45) % 8];
+    const where = k < 1.5 ? "at the same place" : `${miles < 1 ? "under a mile" : miles + " mile" + (miles === 1 ? "" : "s")} to the ${dir}`;
+    let when = gapText(a, b);
+    const aEnd = a.e || a.s, bStart = b.s;
+    if (bStart && aEnd && a.s && bStart > a.s && bStart < aEnd && when) when += ", while that siege was still going on";
+    return `From ${a.p}: ${[when, where].filter(Boolean).join(", ")}.`;
+  }
+
+  /* tour */
+  let tour = null;
+  const tourEl = $("tour");
+  const tourOverlaps = () => getComputedStyle(tourEl).position === "absolute";
+  function startTour() {
+    const list = storySeq(state.story);
+    if (!list.length) return;
+    tour = { list, i: 0 };
+    document.querySelector(".plate").classList.add("touring");
+    tourEl.hidden = false;
+    map.invalidateSize();
+    if (matchMedia("(max-width: 820px)").matches) document.querySelector(".plate").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    goTo(0);
+  }
+  function endTour() {
+    if (!tour) return;
+    tour = null; tourEl.hidden = true;
+    document.querySelector(".plate").classList.remove("touring");
+    map.invalidateSize();
+    drawRoute();
+  }
+  function goTo(i) {
+    if (!tour) return;
+    tour.i = Math.max(0, Math.min(i, tour.list.length - 1));
+    const d = tour.list[tour.i], n = tour.list.length, st = STORY[state.story];
+    tourEl.querySelector(".tour-title").textContent = st ? st.label : "";
+    tourEl.querySelector(".tour-step").textContent = `${tour.i + 1} of ${n}`;
+    tourEl.querySelector(".tour-place").textContent = d.p;
+    tourEl.querySelector(".tour-when").innerHTML = [esc(fmtRange(d.s, d.e)) + (d.dl ? " · " + esc(d.dl) : ""), d.w ? `<span class="pill" style="color:${colour(d.w)}"><i></i>${esc(SIDE[d.w].label)} prevailed</span>` : ""].filter(Boolean).join(" ");
+    tourEl.querySelector(".tour-head").textContent = d.h || "";
+    tourEl.querySelector(".tour-leg").textContent = tour.i ? legText(tour.list[tour.i - 1], d) : (n > 1 ? `The first of ${n} sieges in this story.` : "The only siege in this story.");
+    $("tourPrev").disabled = tour.i === 0;
+    $("tourNext").disabled = tour.i === n - 1;
+    $("tourNext").innerHTML = tour.i === n - 1 ? "The end" : `Next <span aria-hidden="true">›</span>`;
+    drawRoute();
+    map.closePopup();
+    showLeg(tour.i ? tour.list[tour.i - 1] : null, d);
+  }
+  // Frame the leg just travelled (previous siege and this one), keeping clear of the tour panel.
+  function showLeg(a, b) {
+    const below = tourOverlaps() ? tourEl.offsetHeight + 20 : 0;   // on phones the panel sits under the map instead
+    const pad = { paddingTopLeft: [Math.min(150, Math.round(map.getSize().x * 0.3)), 40], paddingBottomRight: [50, below + 30], duration: reduceMotion ? 0 : 1 };
+    if (a && km(a, b) > 1.5) map.flyToBounds(L.latLngBounds([[a.lat, a.lng], [b.lat, b.lng]]), { ...pad, maxZoom: 9 });
+    else {
+      const z = Math.max(map.getZoom(), M.zoomWhenSiegeChosen || 8);
+      const c = map.unproject(map.project([b.lat, b.lng], z).add([0, Math.round(below / 2)]), z);
+      map.flyTo(c, z, { duration: pad.duration });
+    }
+  }
+  function readTourSiege() {
+    if (!tour) return;
+    const d = tour.list[tour.i], g = groupOf.get(d);
+    if (!g.vis.includes(d)) return;
+    tourEl.classList.add("compact");   // the panel shrinks while the full account is open
+    g.popup.options.autoPanPaddingBottomRight = [24, tourOverlaps() ? tourEl.offsetHeight + 64 : 24];
+    g.popup.options.autoPanPaddingTopLeft = [24, 30];
+    showInPopup(g, g.vis.indexOf(d)); g.marker.openPopup();
+  }
+  $("tourRead").onclick = readTourSiege;
+  $("tourPrev").onclick = () => goTo(tour.i - 1);
+  $("tourNext").onclick = () => goTo(tour.i + 1);
+  $("tourClose").onclick = endTour;
+  document.addEventListener("keydown", e => {
+    if (!tour || e.target.closest("input, textarea, select")) return;
+    if (e.key === "ArrowRight") { e.preventDefault(); goTo(tour.i + 1); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); goTo(tour.i - 1); }
+    else if (e.key === "Escape") endTour();
   });
 
   const hist = $("hist");
@@ -425,7 +601,7 @@
 
   const visible = () => DATA.filter(d => (!d.w || state.sides.has(d.w))
     && (state.year == null || d.y === state.year)
-    && (!state.story || d.t === state.story)
+    && (!state.story || inStory(d, state.story))
     && (!state.q || d.p.toLowerCase().includes(state.q) || d.c.toLowerCase().includes(state.q)));
 
   function render(fit) {
@@ -434,11 +610,12 @@
     scheduleDeclutter();
     // towns step back further while a story or year is chosen, so the chosen sieges stand alone
     map.getContainer().classList.toggle("towns-faded", M.fadeTownsWhenFiltered !== false && (state.story != null || state.year != null));
+    drawCard(); drawRoute();
     if (fit && vis.length) map.flyToBounds(L.latLngBounds(vis.map(d => [d.lat, d.lng])).pad(0.15), { maxZoom: 8, duration: reduceMotion ? 0 : 0.8 });
 
     const longest = vis.filter(d => d.d != null).reduce((a, d) => (!a || d.d > a.d ? d : a), null);
     $("stats").innerHTML = vis.length
-      ? `<span><b>${vis.length}</b> siege${vis.length === 1 ? "" : "s"}</span>${longest ? `<span>longest: <b>${esc(longest.p)}</b>, ${esc(fmtDays(longest))}</span>` : ""}`
+      ? `<span><b>${vis.length}</b> siege${vis.length === 1 ? "" : "s"}${state.story && STORY[state.story] ? ` in <i>${esc(STORY[state.story].label)}</i>` : ""}</span>${longest ? `<span>longest: <b>${esc(longest.p)}</b>, ${esc(fmtDays(longest))}</span>` : ""}`
       : `<span>No sieges match these filters.</span>`;
 
     const rows = [...vis];
@@ -464,10 +641,19 @@
 
   function focusSiege(d) {
     const g = groupOf.get(d);
-    map.flyTo([g.lat, g.lng], Math.max(map.getZoom(), M.zoomWhenSiegeChosen || 8), { duration: reduceMotion ? 0 : 0.9 });
+    if (!g.vis.includes(d)) return;
+    const z = Math.max(map.getZoom(), M.zoomWhenSiegeChosen || 8);
+    map.closePopup();
+    g.popup.options.autoPanPaddingBottomRight = [24, tour && tourOverlaps() ? tourEl.offsetHeight + 44 : 24];
+    g.popup.options.autoPanPaddingTopLeft = [24, 96];
+    map.flyTo([g.lat, g.lng], z, { duration: reduceMotion ? 0 : 0.9 });
     map.once("moveend", () => { showInPopup(g, g.vis.indexOf(d)); g.marker.openPopup(); });
     if (matchMedia("(max-width: 820px)").matches) document.querySelector(".plate").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   }
 
-  render();
+  // open a story named in the link (#story-newarks-ring), otherwise the first group
+  const fromHash = STORIES.find(s => location.hash === "#story-" + slug(s.value));
+  if (fromHash) { state.story = fromHash.value; openGroup = fromHash.group || ""; setSort(fromHash.order === "long" ? "long" : "date"); }
+  drawGroups();
+  render(!!fromHash);
 })();

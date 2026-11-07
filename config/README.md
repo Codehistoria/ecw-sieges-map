@@ -13,6 +13,7 @@ Colours are written as hex codes like `"#9a1c2c"`. Any colour picker gives you o
 | `intro` | The paragraph under the heading. |
 | `footer` | The note at the bottom of the side panel (source, date conventions). |
 | `searchPlaceholder` | Grey text in the search box. |
+| `storiesIntro` | The short explanation under the Stories heading, saying what choosing a story does. |
 
 ## `github`
 
@@ -25,11 +26,12 @@ Colours are written as hex codes like `"#9a1c2c"`. Any colour picker gives you o
 | `sieges` | The siege spreadsheet. Default `data/sieges.csv`. |
 | `cities` | The towns spreadsheet. Set to `""` to show no towns. |
 | `coastline`, `rivers` | Map outlines (GeoJSON). |
+| `stories` | The stories file (`data/stories.csv`; see the main README). Remove this line to fall back to the `stories` list below. |
 | `encoding` | `"auto"` reads UTF-8 and falls back to Excel's Windows format. Leave as `"auto"`. |
 
 ## `columns`: spreadsheet headings
 
-If a column heading in the spreadsheet changes, change it here instead of in the code. The left side is what the map needs; the right side is the heading in your spreadsheet. `image2` and `caption2` are optional.
+If a column heading in the spreadsheet changes, change it here instead of in the code. The left side is what the map needs; the right side is the heading in your spreadsheet. `image2`, `caption2` and `tags` are optional.
 
 ## `dates`
 
@@ -49,7 +51,7 @@ One entry per side. `value` must match the spreadsheet's MAP Attacker/Defender/O
 
 ## `stories`
 
-The story buttons (the old story-map tabs). `value` matches the spreadsheet's Themes column, `label` is the button text, and `sort` is how the list is ordered when the story is picked: `"long"` (longest first), `"date"` or `"az"`. Add, remove or reorder entries freely.
+Only used if `data.stories` is removed: the stories now come from `data/stories.csv`, which also holds each story's group, summary and account. In this fallback list `value` matches the spreadsheet's Themes or Tags column, `label` is the button text, and `sort` is the order: `"long"` (longest first) or `"date"`.
 
 ## `years`
 

@@ -7,7 +7,8 @@
     "titleHighlight": "Civil Wars",
     "intro": "Every town, castle, church and great house besieged in the wars of the three kingdoms. Pick a story, a year or a side, then click a siege to read about it.",
     "footer": "Data: Stephen Charnock and National Civil War Centre, Newark. Dates are Old Style (Julian calendar), with the year taken to begin on 1 January rather than 25 March; “approx.” durations are the source's estimates.",
-    "searchPlaceholder": "Find a place or county"
+    "searchPlaceholder": "Find a place or county",
+    "storiesIntro": "A story picks out the sieges that share a thread: how they ended, a campaign, a commander, a theme. Choose one and the map shows only those sieges, with an account of what links them. Then follow the story to visit each siege in turn."
   },
 
   "github": {
@@ -21,6 +22,7 @@
     "cities": "data/cities.csv",
     "coastline": "data/basemap/coastline.geojson",
     "rivers": "data/basemap/rivers.geojson",
+    "stories": "data/stories.csv",
     "encoding": "auto"
   },
 
@@ -36,6 +38,7 @@
     "defender": "MAP Defender",
     "outcome": "MAP Outcome",
     "story": "Themes",
+    "tags": "Tags",
     "headline": "Headline",
     "body": "Body Text",
     "website": "Website",
@@ -64,6 +67,7 @@
     { "value": "Scots", "label": "Scots", "plural": "the Scots", "colour": "#e0ad1f" }
   ],
 
+  "stories_help": "Stories now come from data/stories.csv (see config/README.md). This list is only used if data.stories is removed.",
   "stories": [
     { "value": "Longest", "label": "Longest", "sort": "long" },
     { "value": "Bloodiest", "label": "Bloodiest", "sort": "date" },

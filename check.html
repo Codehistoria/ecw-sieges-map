@@ -41,6 +41,7 @@
     <a href="#s-photos-missing">Photos not found</a>
     <a href="#s-photos-unused">Unused photos</a>
     <a href="#s-sheet">Spreadsheet problems</a>
+    <a href="#s-stories">Stories</a>
     <a href="#s-review">Issues found in review</a>
   </nav>
 
@@ -64,6 +65,10 @@
   <p class="lede">Found automatically each time this page loads.</p>
   <div class="wrap"><table><thead><tr><th>Row</th><th>ID</th><th>Place</th><th>Column</th><th>Problem</th></tr></thead><tbody id="problems"></tbody></table></div>
 
+  <h2 id="s-stories">Stories <span class="n" id="nStories">…</span></h2>
+  <p class="lede">The stories come from <code>data/stories.csv</code>; a siege joins a story when its <b>Tags</b> (or <b>Themes</b>) column names the story's Tag. Separate several tags with a semicolon. Stories with no sieges, and tags with no story, are listed under Spreadsheet problems.</p>
+  <div class="wrap"><table><thead><tr><th>Group</th><th>Tag</th><th>Title</th><th>Order</th><th>Sieges</th></tr></thead><tbody id="stories"></tbody></table></div>
+
   <h2>Rows not shown on the map <span class="n" id="nSkipped">…</span></h2>
   <div class="wrap"><table><thead><tr><th>Row</th><th>ID</th><th>Place</th><th>Why</th></tr></thead><tbody id="skipped"></tbody></table></div>
 
@@ -75,7 +80,7 @@
 <script src="js/data.js"></script>
 <script>
 (async function () {
-  const { loadConfig, fetchText, parseCSV, buildRecords, imageURL } = window.SiegeData;
+  const { loadConfig, loadStories, fetchText, parseCSV, buildRecords, imageURL } = window.SiegeData;
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const show = s => esc(s).replace(/^ | $/g, "␣");   // make leading/trailing spaces visible
@@ -135,13 +140,22 @@
 
   try {
     const cfg = await loadConfig();
+    let storyProblems = [];
+    try { const ls = await loadStories(cfg); cfg.stories = ls.stories; storyProblems = ls.problems.map(p => ({ ...p, field: "stories.csv: " + p.field })); }
+    catch (e) { storyProblems = [{ row: "", id: "", place: "", field: "stories.csv", message: e.message }]; cfg.data.stories = null; cfg.stories = (await loadStories(cfg)).stories; }
     const { text, encoding } = await fetchText(cfg.data.sieges, cfg.data.encoding);
     const parsed = parseCSV(text);
-    const missingCols = Object.entries(cfg.columns).filter(([k, c]) => !["image2", "caption2"].includes(k) && !parsed.meta.fields.includes(c)).map(([, c]) => c);
+    const missingCols = Object.entries(cfg.columns).filter(([k, c]) => !["image2", "caption2", "tags"].includes(k) && !parsed.meta.fields.includes(c)).map(([, c]) => c);
     const { records, skipped, problems } = buildRecords(parsed.data, cfg);
     missingCols.forEach(c => problems.unshift({ row: 1, id: "", place: "", field: c, message: "Column not found in the spreadsheet (check the heading, or change \"columns\" in config/config.json)" }));
     if (encoding !== "utf-8") problems.unshift({ row: "", id: "", place: "", field: "Whole file", message: `Saved as ${encoding}, not UTF-8. In Excel use File › Save As › "CSV UTF-8 (Comma delimited)".` });
     parsed.errors.slice(0, 20).forEach(e => problems.push({ row: (e.row ?? 0) + 2, id: "", place: "", field: "CSV", message: e.message }));
+    const inStory = (d, v) => d.t === v || (d.tags || []).includes(v);
+    const storyRows = cfg.stories.map(st => ({ group: st.group, tag: st.value, title: st.label, order: st.order === "long" ? "length" : st.order, n: records.filter(d => inStory(d, st.value)).length }));
+    storyRows.filter(r => !r.n).forEach(r => storyProblems.push({ row: "", id: r.tag, place: r.title, field: "stories.csv: Tag", message: "No siege has this tag, so the story would be empty" }));
+    problems.push(...storyProblems);
+    fill("stories", storyRows, ["group", "tag", "title", "order", { k: "n", cls: "num" }], "No stories.");
+    badge("nStories", storyRows.length, "ok");
     fill("problems", problems, [{ k: "row", cls: "num" }, "id", "place", "field", "message"], "No problems found.");
     fill("skipped", skipped, [{ k: "row", cls: "num" }, "id", "place", "reason"], "Every row is on the map.");
     badge("nProblems", problems.length); badge("nSkipped", skipped.length, "warn");
