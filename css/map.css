@@ -224,17 +224,20 @@ footer { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; border-to
 .town-switch { background: var(--paper); padding: 0; }
 .town-switch label { display: flex; align-items: center; gap: 6px; padding: 5px 9px; font-family: var(--f-ui); font-size: 12.5px; color: var(--ink); cursor: pointer; user-select: none; }
 .town-switch input { margin: 0; accent-color: var(--ink); }
-.leaflet-container.towns-off .city { display: none; }
+.town-switch label + label { border-top: 1px solid var(--rule); }
+.leaflet-container.cities-off .city:not(.town) { display: none; }
+.leaflet-container.towns-off .city.town { display: none; }
 .city { transition: opacity .25s; }
 .leaflet-container.towns-faded .city { opacity: .35; }
 
-/* Towns and cities: lighter ink, smaller marks, drawn under the siege circles */
-.city { color: #6f604b; }
-.city.capital { color: var(--ink-soft); font-size: 15px; }
-.city.capital::before { width: 7px; height: 7px; left: -11px; margin-top: -4.5px; background: var(--ink-soft); border-color: var(--ink-soft); box-shadow: inset 0 0 0 1.5px var(--paper); }
-.city.major { color: #6f604b; font-size: 13px; }
-.city.major::before { width: 5px; height: 5px; left: -9px; margin-top: -3.5px; border-color: #6f604b; box-shadow: none; }
-.city.minor { color: #85745a; font-size: 11.5px; }
-.city.minor::before { width: 4px; height: 4px; left: -8px; margin-top: -3px; border-color: #85745a; box-shadow: none; }
+/* Cities (capital, major, minor): larger names in mid-brown ink, so they read as the main places.
+   Towns: small, faint, no dot. Both are drawn under the siege circles. */
+.city { color: #5e4d37; }
+.city.capital { color: var(--ink-soft); font-size: 19px; letter-spacing: .06em; }
+.city.capital::before { width: 8px; height: 8px; left: -12px; margin-top: -5px; background: var(--ink-soft); border-color: var(--ink-soft); box-shadow: inset 0 0 0 1.5px var(--paper); }
+.city.major { color: #5e4d37; font-size: 16px; letter-spacing: .04em; }
+.city.major::before { width: 6px; height: 6px; left: -10px; margin-top: -4px; border-color: #5e4d37; box-shadow: none; }
+.city.minor { color: #6f604b; font-size: 14px; }
+.city.minor::before { width: 5px; height: 5px; left: -9px; margin-top: -3.5px; border-color: #6f604b; box-shadow: none; }
 .city.town { color: #8f7f64; font-size: 11px; transform: translate(-50%, -50%); }
 .city.town::before { display: none; }

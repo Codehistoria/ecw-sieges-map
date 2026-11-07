@@ -208,21 +208,25 @@
   }
   map.on("zoomend", zoomClasses); map.on("moveend", scheduleDeclutter); zoomClasses();
 
-  // "Towns" switch on the map: shows or hides every town and city name.
+  // "Cities" and "Towns" switches on the map. Cities are the capital, major and minor tiers; towns are the market towns.
   if (PLACES.length) {
-    const TownSwitch = L.Control.extend({
+    const PlaceSwitch = L.Control.extend({
       options: { position: "topleft" },
       onAdd() {
         const div = L.DomUtil.create("div", "leaflet-bar town-switch");
-        div.innerHTML = `<label><input type="checkbox" id="townsToggle"${M.showTownsAtStart === false ? "" : " checked"}> Towns</label>`;
+        const box = (id, label, on) => `<label><input type="checkbox" id="${id}"${on ? " checked" : ""}> ${label}</label>`;
+        div.innerHTML = box("citiesToggle", "Cities", M.showCitiesAtStart !== false) + box("townsToggle", "Towns", M.showTownsAtStart !== false);
         L.DomEvent.disableClickPropagation(div);
-        const inp = div.querySelector("input");
-        const apply = () => map.getContainer().classList.toggle("towns-off", !inp.checked);
-        inp.addEventListener("change", apply); setTimeout(apply);
+        const [cities, towns] = div.querySelectorAll("input");
+        const apply = () => {
+          map.getContainer().classList.toggle("cities-off", !cities.checked);
+          map.getContainer().classList.toggle("towns-off", !towns.checked);
+        };
+        cities.addEventListener("change", apply); towns.addEventListener("change", apply); setTimeout(apply);
         return div;
       }
     });
-    map.addControl(new TownSwitch());
+    map.addControl(new PlaceSwitch());
   }
   map.on("popupopen", () => document.querySelector(".plate").classList.add("popup-open"));
   map.on("popupclose", () => document.querySelector(".plate").classList.remove("popup-open"));
