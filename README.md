@@ -92,6 +92,8 @@ Everything you might want to change sits in `config/config.json`: the titles and
 
 To edit it on GitHub, open the file and click the pencil icon. Keep the quote marks and commas. If the page then says the settings file has a mistake, it tells you roughly which line to look at.
 
+If you (or anyone) change `css/map.css` or the files in `js/`, also change the `?v=` number after their names in `index.html` (and `js/data.js` in `check.html`), e.g. `?v=20261107-2` to `?v=20261201-1`. Browsers keep old copies of these files for a while; a new number makes them fetch the new one. The spreadsheet, stories and settings files don't need this: they are always read fresh.
+
 The towns and cities on the map come from `data/cities.csv` (Name, Latitude, Longitude, Tier, Note). Tier is `capital`, `major`, `minor` or `town`. Minor cities appear after one zoom step; `town` (market towns, boroughs and cathedral cities that existed before 1650) appears closer in. Only add places that existed at the time, under the name used then (e.g. Londonderry). The Note shows when you hover over the name.
 
 ## Putting it online with GitHub Pages
