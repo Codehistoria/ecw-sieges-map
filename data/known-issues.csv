@@ -1,4 +1,6 @@
 ID,Place,Column,Issue,What was done,Status
+,93 rows,Caption Image 1 / Caption Image 2,"Photos added from the November upload have no caption, so no photographer or licence is shown. Creative Commons photos must be credited.",Photos linked by place name; captions left empty,Needs checking
+,Whole file,Image 1,"The spreadsheet names 132 photo files that are not in the images folder, including the portraits Fairfax.jpg (18 rows), Rupert.jpg (15), Cromwell.jpg (13) and Charles.jpg (7). Rows with a place photo in Image 2 show that until the named file is uploaded.","Listed on the checker under ""Photos not in the folder""",Needs checking
 ,Whole file,Themes,"Each row has one Themes value, so a siege in a story (e.g. Longest) loses its side tag",Sides taken from MAP Outcome instead,Note
 ,Whole file,Casualties,There is no casualties column; 'Bloodiest' exists only as a Themes tag,Pop-ups show duration and outcome instead,Note
 ,Whole file,Encoding,"Saved in an old DOS encoding (CP850); curly apostrophes, quote marks and dashes were all turned into '?' on export",About 808 restored automatically; a few dozen stray '?' remain. Saved a UTF-8 copy,Note
