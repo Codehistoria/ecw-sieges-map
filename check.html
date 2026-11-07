@@ -159,14 +159,17 @@
       const exact = new Set(files.map(f => f.name));
       const byKey = new Map(); files.forEach(f => { const k = key(f.name); if (!byKey.has(k)) byKey.set(k, []); byKey.get(k).push(f); });
       const used = new Set();
+      // Files some row names exactly are spoken for, so they're never offered as a near-miss for another row
+      // (otherwise "Witton Castle.jpg" would be matched to Wilton Castle's photo).
+      const takenExactly = new Set(refs.filter(r => exact.has(r.file)).map(r => r.file));
       refs.forEach(ref => {
         if (exact.has(ref.file)) { found++; used.add(ref.file); return; }
-        const same = byKey.get(key(ref.file));
-        if (same) { same.forEach(f => used.add(f.name)); near.push({ ...ref, have: same[0].name, diff: describe(ref.file, same[0].name) }); return; }
-        // close spelling
+        const same = (byKey.get(key(ref.file)) || []).filter(f => !takenExactly.has(f.name));
+        if (same.length) { same.forEach(f => used.add(f.name)); near.push({ ...ref, have: same[0].name, diff: describe(ref.file, same[0].name) }); return; }
+        // close spelling, among photos no row has claimed
         const k = key(ref.file);
         let best = null, bestS = 0;
-        files.forEach(f => { const s = similarity(k, key(f.name)); if (s > bestS) { bestS = s; best = f; } });
+        files.forEach(f => { if (takenExactly.has(f.name)) return; const s = similarity(k, key(f.name)); if (s > bestS) { bestS = s; best = f; } });
         if (best && bestS >= 0.92 && key(ref.file).length >= 6) { used.add(best.name); near.push({ ...ref, have: best.name, diff: `spelling (${Math.round(bestS * 100)}% alike)` }); return; }
         missing.push(ref);
       });
