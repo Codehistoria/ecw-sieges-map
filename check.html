@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Siege Map Data Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+  :root { color-scheme: light; --paper: #efe5ca; --paper-deep: #e3d4ad; --ink: #2a2017; --soft: #5e4d37; --rule: #b9a47c; --bad: #9a1c2c; --ok: #3a6f3a; --warn: #a2620f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Alegreya Sans", system-ui, sans-serif; font-size: 15px; line-height: 1.45; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-left, 0px)) 48px; }
+  h1 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 34px; margin: 0 0 4px; }
+  h2 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 23px; margin: 32px 0 8px; display: flex; gap: 10px; align-items: baseline; }
+  h2 .n { font-family: "Alegreya Sans", sans-serif; font-size: 13px; padding: 1px 9px; border-radius: 999px; border: 1px solid currentColor; }
+  .lede { color: var(--soft); max-width: 70ch; margin: 0 0 18px; }
+  .summary { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 10px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+  .summary b { font-size: 18px; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .wrap { overflow-x: auto; border: 1px solid var(--rule); background: #f6efdb; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #e0d2ad; vertical-align: top; }
+  th { background: var(--paper-deep); font-weight: 600; position: sticky; top: 0; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code { font-size: 13px; background: #fff8e6; padding: 0 4px; border-radius: 2px; }
+  .empty { padding: 12px; color: var(--soft); font-style: italic; }
+  a { color: var(--bad); }
+  .tip { background: #f6efdb; border: 1px dashed var(--rule); padding: 10px 14px; margin-top: 10px; max-width: 80ch; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Siege map data check</h1>
+  <p class="lede">This page reads the same settings file and spreadsheet as the map and lists anything that needs fixing. Fix the spreadsheet, save it as <b>CSV UTF-8</b>, upload it over <code>data/sieges.csv</code>, then refresh this page. <a href="index.html">Back to the map</a></p>
+  <div class="summary" id="summary">Checking…</div>
+
+  <h2>Spreadsheet problems <span class="n" id="nProblems">…</span></h2>
+  <div class="wrap"><table><thead><tr><th>Row</th><th>ID</th><th>Place</th><th>Column</th><th>Problem</th></tr></thead><tbody id="problems"></tbody></table></div>
+
+  <h2>Rows not shown on the map <span class="n" id="nSkipped">…</span></h2>
+  <div class="wrap"><table><thead><tr><th>Row</th><th>ID</th><th>Place</th><th>Why</th></tr></thead><tbody id="skipped"></tbody></table></div>
+
+  <h2>Photos named in the spreadsheet but not found <span class="n" id="nMissing">…</span></h2>
+  <div class="wrap"><table><thead><tr><th>Row</th><th>Place</th><th>Column</th><th>File name in spreadsheet</th><th>Looked for</th></tr></thead><tbody id="missing"></tbody></table></div>
+  <div class="tip">Names must match exactly, including capital letters, spaces and the ending (<code>.jpg</code> is not the same as <code>.JPG</code>). Put photos in the <code>images</code> folder.</div>
+
+  <h2>Large photos <span class="n" id="nLarge">…</span></h2>
+  <p class="lede">Photos over 1 MB slow the map down. Resizing them to about 1200 pixels wide keeps them sharp and small.</p>
+  <div class="wrap"><table><thead><tr><th>File</th><th>Size</th></tr></thead><tbody id="large"></tbody></table></div>
+</main>
+<script src="js/vendor/papaparse.min.js"></script>
+<script src="js/data.js"></script>
+<script>
+(async function () {
+  const { loadConfig, fetchText, parseCSV, buildRecords, imageURL } = window.SiegeData;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fill = (id, rows, cols, emptyMsg) => {
+    $(id).innerHTML = rows.length ? rows.map(r => "<tr>" + cols.map(c => `<td${typeof c === "object" ? ` class="${c.cls}"` : ""}>${esc(r[typeof c === "object" ? c.k : c])}</td>`).join("") + "</tr>").join("")
+      : `<tr><td colspan="${cols.length}" class="empty">${esc(emptyMsg)}</td></tr>`;
+  };
+  const badge = (id, n) => { $(id).textContent = n; $(id).className = "n " + (n ? "bad" : "ok"); };
+  try {
+    const cfg = await loadConfig();
+    const { text, encoding } = await fetchText(cfg.data.sieges, cfg.data.encoding);
+    const parsed = parseCSV(text);
+    const missingCols = Object.entries(cfg.columns).filter(([k, c]) => !["image2", "caption2"].includes(k) && !parsed.meta.fields.includes(c)).map(([, c]) => c);
+    const { records, skipped, problems } = buildRecords(parsed.data, cfg);
+    missingCols.forEach(c => problems.unshift({ row: 1, id: "", place: "", field: c, message: "Column not found in the spreadsheet (check the heading, or change \"columns\" in config/config.json)" }));
+    if (encoding !== "utf-8") problems.unshift({ row: "", id: "", place: "", field: "Whole file", message: `Saved as ${encoding}, not UTF-8. In Excel use File › Save As › "CSV UTF-8 (Comma delimited)".` });
+    if (parsed.errors.length) parsed.errors.slice(0, 20).forEach(e => problems.push({ row: (e.row ?? 0) + 2, id: "", place: "", field: "CSV", message: e.message }));
+
+    fill("problems", problems, [{ k: "row", cls: "num" }, "id", "place", "field", "message"], "No problems found.");
+    fill("skipped", skipped, [{ k: "row", cls: "num" }, "id", "place", "reason"], "Every row is on the map.");
+    badge("nProblems", problems.length); badge("nSkipped", skipped.length);
+
+    // photos
+    const folder = (cfg.images || {}).folder || "images/";
+    const files = new Map();
+    records.forEach(r => r.images.forEach((im, i) => {
+      const k = im.file;
+      if (!files.has(k)) files.set(k, []);
+      files.get(k).push({ row: r.row, place: r.p, col: i ? cfg.columns.image2 : cfg.columns.image });
+    }));
+    const missing = [], large = [];
+    let found = 0;
+    await Promise.all([...files.keys()].map(async f => {
+      const url = imageURL(folder, f);
+      try {
+        const res = await fetch(url, { method: "HEAD", cache: "no-cache" });
+        if (!res.ok) throw 0;
+        found++;
+        const len = +res.headers.get("content-length");
+        if (len > 1024 * 1024) large.push({ file: f, size: (len / 1048576).toFixed(1) + " MB" });
+      } catch (e) {
+        files.get(f).forEach(u => missing.push({ row: u.row, place: u.place, col: u.col, file: f, url: decodeURI(url) }));
+      }
+    }));
+    missing.sort((a, b) => a.row - b.row);
+    fill("missing", missing, [{ k: "row", cls: "num" }, "place", "col", "file", "url"], "Every photo named in the spreadsheet was found.");
+    fill("large", large, ["file", { k: "size", cls: "num" }], "No photos over 1 MB.");
+    badge("nMissing", missing.length); badge("nLarge", large.length);
+
+    const withPhoto = records.filter(r => r.images.length).length;
+    $("summary").innerHTML = [
+      `<span><b>${records.length}</b> sieges on the map</span>`,
+      `<span><b>${skipped.length}</b> rows left off</span>`,
+      `<span><b>${files.size}</b> photo files named, <b class="${found === files.size ? "ok" : "warn"}">${found}</b> found</span>`,
+      `<span><b>${withPhoto}</b> sieges have a photo named</span>`,
+      `<span>File read as <b>${esc(encoding)}</b></span>`
+    ].join("");
+  } catch (e) {
+    $("summary").innerHTML = `<span class="bad"><b>Couldn't run the check:</b> ${esc(e.message)}</span>`;
+  }
+})();
+</script>
+</body>
+</html>

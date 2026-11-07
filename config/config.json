@@ -1,0 +1,122 @@
+{
+  "_help": "Settings for the siege map. Edit the values, keep the quotes and commas. Every setting is explained in config/README.md. If the map shows 'Settings file has a mistake', check for a missing comma or quote near the line it names.",
+
+  "text": {
+    "eyebrow": "Britain & Ireland · 1640–1654",
+    "title": "Sieges of the",
+    "titleHighlight": "Civil Wars",
+    "intro": "Every town, castle, church and great house besieged in the wars of the three kingdoms. Pick a story, a year or a side, then click a siege to read about it.",
+    "footer": "Data: National Civil War Centre, Newark. Dates are Old Style, with the year taken to begin on 1 January; “approx.” durations are the source's estimates.",
+    "searchPlaceholder": "Find a place or county"
+  },
+
+  "data": {
+    "sieges": "data/sieges.csv",
+    "cities": "data/cities.csv",
+    "coastline": "data/basemap/coastline.geojson",
+    "rivers": "data/basemap/rivers.geojson",
+    "encoding": "auto"
+  },
+
+  "columns": {
+    "id": "ID",
+    "place": "Place",
+    "county": "County",
+    "country": "Country",
+    "start": "Start Date",
+    "end": "End Date",
+    "duration": "Duration",
+    "attacker": "MAP Attacker",
+    "defender": "MAP Defender",
+    "outcome": "MAP Outcome",
+    "story": "Themes",
+    "headline": "Headline",
+    "body": "Body Text",
+    "website": "Website",
+    "image": "Image 1",
+    "caption": "Caption Image 1",
+    "image2": "Image 2",
+    "caption2": "Caption Image 2",
+    "latitude": "Latitude",
+    "longitude": "Longitude"
+  },
+
+  "dates": {
+    "_help": "How dates are written in the spreadsheet: 'year-first' (1644/7/2), 'day-first' (2/7/1644) or 'auto' to accept both.",
+    "format": "auto"
+  },
+
+  "images": {
+    "folder": "images/",
+    "showInPopup": true,
+    "showInHover": true
+  },
+
+  "sides": [
+    { "value": "Parliamentarians", "label": "Parliament", "plural": "Parliamentarians", "colour": "#c0701a" },
+    { "value": "Royalists", "label": "Royalists", "plural": "Royalists", "colour": "#9a1c2c" },
+    { "value": "Scots", "label": "Scots", "plural": "the Scots", "colour": "#2b5c8a" }
+  ],
+
+  "stories": [
+    { "value": "Longest", "label": "Longest", "sort": "long" },
+    { "value": "Bloodiest", "label": "Bloodiest", "sort": "date" },
+    { "value": "Women", "label": "Women", "sort": "date" },
+    { "value": "Must Read", "label": "Must Read", "sort": "date" },
+    { "value": "Royalist Best", "label": "Royalist Best", "sort": "date" },
+    { "value": "Parliamentarian Best", "label": "Parliamentarian Best", "sort": "date" }
+  ],
+
+  "years": {
+    "from": 1640,
+    "to": 1654,
+    "bands": [
+      { "label": "Bishops'", "from": 1640, "to": 1641 },
+      { "label": "First Civil War", "from": 1642, "to": 1646 },
+      { "label": "Second", "from": 1647, "to": 1648 },
+      { "label": "Third", "from": 1649, "to": 1651 },
+      { "label": "Later", "from": 1652, "to": 1654 }
+    ],
+    "playSecondsPerYear": 1.6
+  },
+
+  "list": {
+    "defaultSort": "long",
+    "showFirst": 40
+  },
+
+  "map": {
+    "startView": { "south": 49.9, "west": -5.8, "north": 55.2, "east": 1.8 },
+    "minZoom": 5,
+    "maxZoom": 12,
+    "zoomWhenSiegeChosen": 8,
+    "groupSiegesWithinKm": 0.6,
+    "markerScale": 1.0,
+    "showRivers": true,
+    "showCities": true,
+    "smallTownsFromZoom": 6.75,
+    "showCompass": true,
+    "showTitleBox": true,
+    "titleBox": { "title": "A Mapp of the Sieges", "subtitle": "IN THE LATE WARRES · MDCXL–MDCLIV" },
+    "labels": [
+      { "text": "The German Ocean", "lat": 54.3, "lng": 2.0, "style": "sea" },
+      { "text": "The British Channel", "lat": 50.1, "lng": -1.6, "style": "sea" },
+      { "text": "St George's Channel", "lat": 52.0, "lng": -5.6, "style": "sea" },
+      { "text": "The Irish Sea", "lat": 53.85, "lng": -5.1, "style": "sea" },
+      { "text": "Wales", "lat": 52.35, "lng": -3.75, "style": "country" },
+      { "text": "Scotland", "lat": 56.7, "lng": -4.2, "style": "country" },
+      { "text": "Ireland", "lat": 53.1, "lng": -8.0, "style": "country" },
+      { "text": "England", "lat": 52.75, "lng": -1.6, "style": "country" }
+    ]
+  },
+
+  "colours": {
+    "paper": "#efe5ca",
+    "paperDeep": "#e3d4ad",
+    "inlay": "#f8f2e2",
+    "ink": "#2a2017",
+    "sea": "#cdd0bd",
+    "land": "#efe5ca",
+    "rivers": "#7c8b88"
+  }
+}

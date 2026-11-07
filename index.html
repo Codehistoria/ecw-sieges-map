@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sieges of the Civil Wars</title>
+<meta name="description" content="An interactive map of the sieges of the British and Irish Civil Wars, 1640–1654, from the National Civil War Centre, Newark.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Alegreya:ital,wght@0,400;0,600;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="js/vendor/leaflet.css">
+<link rel="stylesheet" href="css/map.css">
+</head>
+<body>
+<div class="app">
+  <aside class="key">
+    <header>
+      <div class="eyebrow" id="eyebrow"></div>
+      <h1 id="title"></h1>
+      <p id="intro"></p>
+    </header>
+
+    <div class="stats" id="stats" aria-live="polite"><span>Loading the sieges…</span></div>
+
+    <section>
+      <h2 class="section-label">Stories</h2>
+      <div class="stories" id="stories" role="group" aria-label="Choose a story"></div>
+    </section>
+
+    <section>
+      <h2 class="section-label">Sieges begun, by year <small id="yearNote">All years</small></h2>
+      <div class="hist" id="hist" role="group" aria-label="Filter by year"></div>
+      <div class="years" id="yearLabels"></div>
+      <div class="wars" id="wars"></div>
+      <div class="year-row">
+        <button class="chip" id="allYears" aria-pressed="true">All years</button>
+        <button class="chip" id="play" aria-pressed="false"><span id="playIcon">▶</span> <span id="playTxt">Play through the wars</span></button>
+      </div>
+      <div class="undated" id="undated"></div>
+    </section>
+
+    <section>
+      <h2 class="section-label">Who prevailed <small>tap to hide</small></h2>
+      <div class="sides" id="sides"></div>
+      <div class="size-key" aria-hidden="true">
+        <div><i style="width:10px;height:10px"></i>1 day</div>
+        <div><i style="width:22px;height:22px"></i>6 months</div>
+        <div><i style="width:34px;height:34px"></i>2 years</div>
+        <div><i class="dash" style="width:12px;height:12px"></i>length unknown</div>
+        <div><span class="key-multi"><i id="multiKey" style="width:20px;height:20px"></i><b>3</b></span>several sieges</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="list-head">
+        <input class="search" id="search" type="search" aria-label="Find a place or county" autocomplete="off">
+        <div class="sort" role="group" aria-label="Sort the list">
+          <button id="sortLong" data-sort="long" aria-pressed="true">Longest</button>
+          <button id="sortDate" data-sort="date" aria-pressed="false">Date</button>
+          <button id="sortAz" data-sort="az" aria-pressed="false">A–Z</button>
+        </div>
+      </div>
+      <ol class="list" id="list"></ol>
+      <button class="chip more" id="more" hidden>Show all</button>
+    </section>
+
+    <footer id="footer"></footer>
+  </aside>
+
+  <div class="plate">
+    <div id="map" aria-label="Map of sieges in Britain and Ireland"></div>
+    <svg class="compass" id="compass" viewBox="-50 -60 100 115" aria-hidden="true">
+      <g fill="none" stroke="#2a2017" stroke-width="1"><circle r="30"/><circle r="26" stroke-width=".5"/></g>
+      <g stroke="#2a2017" stroke-width=".8">
+        <path d="M0-44 L6-6 L0 0Z" fill="#2a2017"/><path d="M0-44 L-6-6 L0 0Z" fill="#efe5ca"/>
+        <path d="M0 44 L-6 6 L0 0Z" fill="#2a2017"/><path d="M0 44 L6 6 L0 0Z" fill="#efe5ca"/>
+        <path d="M44 0 L6 6 L0 0Z" fill="#2a2017"/><path d="M44 0 L6-6 L0 0Z" fill="#efe5ca"/>
+        <path d="M-44 0 L-6-6 L0 0Z" fill="#2a2017"/><path d="M-44 0 L-6 6 L0 0Z" fill="#efe5ca"/>
+        <path d="M0 0 L20-20 L4-4Z M0 0 L-20 20 L-4 4Z M0 0 L20 20 L4 4Z M0 0 L-20-20 L-4-4Z" fill="#9a1c2c" stroke-width=".5"/>
+      </g>
+      <text y="-48" text-anchor="middle" font-family="IM Fell English SC, Georgia, serif" font-size="13" fill="#2a2017">N</text>
+    </svg>
+    <div class="cartouche" id="cartouche"><div class="t"></div><div class="s"></div></div>
+    <div class="notice" id="notice" hidden></div>
+  </div>
+</div>
+
+<script src="js/vendor/leaflet.js"></script>
+<script src="js/vendor/papaparse.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+</body>
+</html>
