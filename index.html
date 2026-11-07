@@ -20,15 +20,18 @@
       <p id="intro"></p>
     </header>
 
-    <div class="stats" id="stats" aria-live="polite"><span>Loading the sieges…</span></div>
+    <div class="topbar">
+      <div class="stats" id="stats" aria-live="polite"><span>Loading the sieges…</span></div>
+      <button type="button" class="reset" id="resetAll" title="Clear the story, year, side and search, and return to the whole map"><span aria-hidden="true">↺</span> Show all sieges</button>
+    </div>
 
-    <section class="stories-sec">
-      <h2 class="section-label">Stories</h2>
+    <details class="stories-sec" id="storiesBox">
+      <summary><h2 class="section-label">Stories <small id="storyNow"></small></h2></summary>
       <p class="explain" id="storiesIntro"></p>
       <div class="story-groups" id="storyGroups" role="group" aria-label="Kinds of story"></div>
       <div class="stories" id="stories" role="group" aria-label="Choose a story"></div>
       <article class="story-card" id="storyCard" aria-live="polite" hidden></article>
-    </section>
+    </details>
 
     <section>
       <h2 class="section-label">Sieges begun, by year <small id="yearNote">All years</small></h2>
@@ -45,11 +48,16 @@
     <section>
       <h2 class="section-label">Who prevailed <small>tap to hide</small></h2>
       <div class="sides" id="sides"></div>
+    </section>
+
+    <section>
+      <h2 class="section-label">Circle size</h2>
       <label class="size-toggle"><input type="checkbox" id="sizeToggle"> Size circles by length of siege</label>
       <div class="size-key" id="sizeKey" aria-hidden="true"></div>
     </section>
 
     <section>
+      <h2 class="section-label">Find a siege</h2>
       <div class="list-head">
         <input class="search" id="search" type="search" aria-label="Find a place or county" autocomplete="off">
         <div class="sort" role="group" aria-label="Sort the list">

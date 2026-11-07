@@ -396,6 +396,7 @@
     endTour();
     state.story = v; state.showAll = false;
     const st = v && STORY[v];
+    if (st) $("storiesBox").open = true;
     if (st && (st.group || "") !== openGroup) openGroup = st.group || "";
     drawGroups();
     if (st) setSort(st.order === "long" ? "long" : "date");
@@ -405,6 +406,7 @@
 
   function drawCard() {
     const st = state.story && STORY[state.story];
+    $("storyNow").textContent = st ? st.label : "";
     card.hidden = !st;
     if (!st) return;
     const all = DATA.filter(d => inStory(d, st.value)), shown = storySeq(st.value);
@@ -611,6 +613,8 @@
     // towns step back further while a story or year is chosen, so the chosen sieges stand alone
     map.getContainer().classList.toggle("towns-faded", M.fadeTownsWhenFiltered !== false && (state.story != null || state.year != null));
     drawCard(); drawRoute();
+    const filtered = state.story != null || state.year != null || !!state.q || state.sides.size < SIDES.length;
+    $("resetAll").classList.toggle("active", filtered);
     if (fit && vis.length) map.flyToBounds(L.latLngBounds(vis.map(d => [d.lat, d.lng])).pad(0.15), { maxZoom: 8, duration: reduceMotion ? 0 : 0.8 });
 
     const longest = vis.filter(d => d.d != null).reduce((a, d) => (!a || d.d > a.d ? d : a), null);
@@ -653,7 +657,23 @@
 
   // open a story named in the link (#story-newarks-ring), otherwise the first group
   const fromHash = STORIES.find(s => location.hash === "#story-" + slug(s.value));
-  if (fromHash) { state.story = fromHash.value; openGroup = fromHash.group || ""; setSort(fromHash.order === "long" ? "long" : "date"); }
+  if (fromHash) { $("storiesBox").open = true; state.story = fromHash.value; openGroup = fromHash.group || ""; setSort(fromHash.order === "long" ? "long" : "date"); }
   drawGroups();
+
+  // "Show all sieges": clears every filter and the tour, and returns to the whole map
+  $("resetAll").onclick = () => {
+    endTour(); stopPlay(); map.closePopup();
+    state.story = null; state.year = null; state.q = ""; state.showAll = false;
+    state.sides = new Set(SIDES.map(s => s.key));
+    $("sides").querySelectorAll("input").forEach(i => { i.checked = true; });
+    $("search").value = "";
+    hist.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", "false"));
+    $("allYears").setAttribute("aria-pressed", "true"); $("yearNote").textContent = "All years";
+    setSort((cfg.list || {}).defaultSort || "long");
+    drawGroups();
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    render();
+    map.flyToBounds([[sv.south, sv.west], [sv.north, sv.east]], { padding: [10, 10], duration: reduceMotion ? 0 : 0.8 });
+  };
   render(!!fromHash);
 })();
