@@ -67,6 +67,13 @@
     { "value": "Scots", "label": "Scots", "plural": "the Scots", "colour": "#e0ad1f" }
   ],
 
+  "tours": {
+    "_help": "How a story's tour looks. Each story picks 'visit' or 'route' in the Tour column of data/stories.csv; 'default' is used when that column is empty. The fade settings run from 0 (invisible) to 1 (full strength).",
+    "default": "visit",
+    "fadeVisited": 0.5,
+    "fadeStillToCome": 0.25
+  },
+
   "stories_help": "Stories now come from data/stories.csv (see config/README.md). This list is only used if data.stories is removed.",
   "stories": [
     { "value": "Longest", "label": "Longest", "sort": "long" },

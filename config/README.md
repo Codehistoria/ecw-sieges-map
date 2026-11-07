@@ -53,6 +53,16 @@ One entry per side. `value` must match the spreadsheet's MAP Attacker/Defender/O
 
 Only used if `data.stories` is removed: the stories now come from `data/stories.csv`, which also holds each story's group, summary and account. In this fallback list `value` matches the spreadsheet's Themes or Tags column, `label` is the button text, and `sort` is the order: `"long"` (longest first) or `"date"`.
 
+## `tours`
+
+How the story tours look (see "Stories" in the main README).
+
+| Setting | What it does |
+|---|---|
+| `default` | The tour style for any story whose Tour column in `data/stories.csv` is empty: `"visit"` or `"route"`. |
+| `fadeVisited` | How strongly places already visited show during a tour, from `0` (hidden) to `1` (full). |
+| `fadeStillToCome` | The same for places still to come. Keep it lower than `fadeVisited` so the two read differently. |
+
 ## `years`
 
 | Setting | What it does |

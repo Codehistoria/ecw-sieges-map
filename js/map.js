@@ -40,6 +40,9 @@
   const setVar = (v, x) => x && root.setProperty(v, x);
   setVar("--paper", col.paper); setVar("--paper-deep", col.paperDeep); setVar("--inlay", col.inlay); setVar("--ink", col.ink); setVar("--sea", col.sea);
   SIDES.forEach((s, i) => setVar("--side" + i, s.colour));
+  const TOURS = cfg.tours || {};
+  if (TOURS.fadeVisited != null) root.setProperty("--fade-visited", TOURS.fadeVisited);
+  if (TOURS.fadeStillToCome != null) root.setProperty("--fade-to-come", TOURS.fadeStillToCome);
 
   // text from the settings file
   document.title = `${T.title || ""} ${T.titleHighlight || ""}`.trim() || document.title;
@@ -345,7 +348,7 @@
         const title = g.vis.length > 1 ? `${names}: ${g.vis.length} sieges` : `${names}, ${g.vis[0].y || "undated"}`;
         const pic = IMG.showInHover === true ? g.vis.find(d => d.images.length) : null;   // off unless switched on in settings
         g.marker.unbindTooltip().bindTooltip(esc(title) + (pic ? imgTag(pic, "tip-img", false) : ""), { className: "tip", direction: "top", offset: [0, -r] });
-        g.marker.setZIndexOffset(-Math.round(r * 20));
+        g.z = -Math.round(r * 20); g.marker.setZIndexOffset(g.z);
         if (g.marker.isPopupOpen()) showInPopup(g, Math.min(g.pick || 0, g.vis.length - 1));
         g.label = g.vis.length > 1 ? `${g.vis.length} sieges at ${[...new Set(g.vis.map(d => d.p))].join(" and ")}` : `Siege of ${g.vis[0].p}`;
       }
@@ -393,7 +396,7 @@
   const storySeq = v => visible().filter(d => inStory(d, v)).sort(STORY[v] && STORY[v].order === "long" ? (a, b) => (b.d ?? -1) - (a.d ?? -1) : byDate);
 
   function selectStory(v, fit) {
-    endTour();
+    endTour(); routeDone = null;
     state.story = v; state.showAll = false;
     const st = v && STORY[v];
     if (st) $("storiesBox").open = true;
@@ -423,28 +426,58 @@
         <button type="button" class="chip go" id="tourStart"${shown.length ? "" : " disabled"}>Follow the story <span aria-hidden="true">▸</span></button>
         <button type="button" class="chip" id="storyClear">Show all sieges</button>
       </div>
-      <p class="sc-how">${st.order === "long" ? "The tour goes from the longest siege to the shortest." : st.order === "route" ? "The line on the map joins the sieges in date order; the tour follows it." : "The tour visits the sieges in date order."}</p>`;
+      <p class="sc-how">${st.tour === "route"
+        ? (routeDone === st.value ? "Tour complete: the full route is coloured by who prevailed at each siege it leads to." : "The grey line is the whole route. Following the story draws it in leg by leg, each coloured by who prevailed at the siege it leads to.")
+        : `The tour visits the sieges ${st.order === "long" ? "from the longest to the shortest" : "in date order"}; places already visited and those still to come are faded.`}</p>`;
     $("tourStart").onclick = () => startTour();
     $("storyClear").onclick = () => selectStory(null, false);
   }
 
   /* the route line (for "route" stories) and the leg just travelled on a tour */
   const routeLayer = L.layerGroup().addTo(map);
+  /* Two tour styles, set per story in stories.csv (Tour column):
+     "visit": no lines; the siege being visited stands out, the ones already visited and still to come are faded.
+     "route": before the tour, the whole route in grey as an overview; during it, the route is drawn leg by leg,
+              each leg coloured by who prevailed at the siege it leads to; once finished, the whole coloured route stays. */
+  let routeDone = null;   // the route story whose tour has been completed
+  const dated = d => !!(d.s || d.e);
+  const legLine = (a, b, opts) => L.polyline([[a.lat, a.lng], [b.lat, b.lng]], { interactive: false, ...opts }).addTo(routeLayer);
   function drawRoute() {
     routeLayer.clearLayers();
     const st = state.story && STORY[state.story];
-    if (st && st.order === "route") {
-      const pts = storySeq(st.value).filter(d => d.s || d.e).map(d => [d.lat, d.lng]);
-      if (pts.length > 1) L.polyline(pts, { color: col.ink || "#2a2017", weight: 1.6, opacity: .55, dashArray: "5 6", interactive: false }).addTo(routeLayer);
-    }
-    if (tour && tour.i > 0) {
-      const a = tour.list[tour.i - 1], b = tour.list[tour.i];
-      if (km(a, b) > 1) L.polyline([[a.lat, a.lng], [b.lat, b.lng]], { color: "#9a1c2c", weight: 3, opacity: .85, dashArray: "8 6", interactive: false }).addTo(routeLayer);
+    if (st && st.tour === "route") {
+      const seq = tour ? tour.list : storySeq(st.value);
+      const upto = tour ? tour.i : seq.length - 1;
+      const coloured = !!tour || routeDone === st.value;
+      for (let k = 1; k <= upto; k++) {
+        const a = seq[k - 1], b = seq[k];
+        if (!dated(a) || !dated(b) || km(a, b) < 1) continue;
+        if (!coloured) legLine(a, b, { color: col.ink || "#2a2017", weight: 1.6, opacity: .45, dashArray: "5 6" });
+        else if (tour && k === upto) legLine(a, b, { color: b.w ? colour(b.w) : (col.ink || "#2a2017"), weight: 4, opacity: .95, dashArray: "9 6", className: "leg-now" });
+        else legLine(a, b, { color: b.w ? colour(b.w) : (col.ink || "#2a2017"), weight: 2.6, opacity: .8 });
+      }
     }
     if (tour) {
       const d = tour.list[tour.i];
       L.circleMarker([d.lat, d.lng], { radius: 17, color: "#9a1c2c", weight: 2.5, fill: false, interactive: false, className: "tour-ring" }).addTo(routeLayer);
     }
+    fadeMarkers();
+  }
+  // While touring: the current siege at full strength, visited ones faded, those still to come faded further.
+  function fadeMarkers() {
+    const pos = tour ? new Map(tour.list.map((d, k) => [d, k])) : null;
+    GROUPS.forEach(g => {
+      const el = g.marker.getElement();
+      if (!el) return;
+      let cls = "";
+      if (pos && g.vis && g.vis.length) {
+        const ks = g.vis.map(d => pos.get(d)).filter(k => k != null);
+        cls = ks.includes(tour.i) ? "t-now" : ks.some(k => k < tour.i) ? "t-past" : "t-next";
+      }
+      el.classList.remove("t-now", "t-past", "t-next");
+      if (cls) el.classList.add(cls);
+      g.marker.setZIndexOffset(cls === "t-now" ? 5000 : g.z || 0);
+    });
   }
 
   // "From Hougham House: 3 months later, 15 miles to the south-west."
@@ -487,6 +520,7 @@
   function startTour() {
     const list = storySeq(state.story);
     if (!list.length) return;
+    if (routeDone === state.story) routeDone = null;
     tour = { list, i: 0 };
     document.querySelector(".plate").classList.add("touring");
     tourEl.hidden = false;
@@ -494,12 +528,17 @@
     if (matchMedia("(max-width: 820px)").matches) document.querySelector(".plate").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
     goTo(0);
   }
-  function endTour() {
+  function endTour(finished) {
     if (!tour) return;
+    if (finished === true && STORY[state.story] && STORY[state.story].tour === "route") routeDone = state.story;
     tour = null; tourEl.hidden = true;
     document.querySelector(".plate").classList.remove("touring");
     map.invalidateSize();
-    drawRoute();
+    drawRoute(); drawCard();
+    if (finished === true) {   // step back to see the whole story
+      const vis = storySeq(state.story);
+      if (vis.length) map.flyToBounds(L.latLngBounds(vis.map(d => [d.lat, d.lng])).pad(0.15), { maxZoom: 8, duration: reduceMotion ? 0 : 1 });
+    }
   }
   function goTo(i) {
     if (!tour) return;
@@ -512,8 +551,7 @@
     tourEl.querySelector(".tour-head").textContent = d.h || "";
     tourEl.querySelector(".tour-leg").textContent = tour.i ? legText(tour.list[tour.i - 1], d) : (n > 1 ? `The first of ${n} sieges in this story.` : "The only siege in this story.");
     $("tourPrev").disabled = tour.i === 0;
-    $("tourNext").disabled = tour.i === n - 1;
-    $("tourNext").innerHTML = tour.i === n - 1 ? "The end" : `Next <span aria-hidden="true">›</span>`;
+    $("tourNext").innerHTML = tour.i === n - 1 ? (st && st.tour === "route" ? "Finish: see the whole route" : "Finish") : `Next <span aria-hidden="true">›</span>`;
     drawRoute();
     map.closePopup();
     showLeg(tour.i ? tour.list[tour.i - 1] : null, d);
@@ -540,11 +578,11 @@
   }
   $("tourRead").onclick = readTourSiege;
   $("tourPrev").onclick = () => goTo(tour.i - 1);
-  $("tourNext").onclick = () => goTo(tour.i + 1);
-  $("tourClose").onclick = endTour;
+  $("tourNext").onclick = () => tour.i === tour.list.length - 1 ? endTour(true) : goTo(tour.i + 1);
+  $("tourClose").onclick = () => endTour();
   document.addEventListener("keydown", e => {
     if (!tour || e.target.closest("input, textarea, select")) return;
-    if (e.key === "ArrowRight") { e.preventDefault(); goTo(tour.i + 1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); if (tour.i < tour.list.length - 1) goTo(tour.i + 1); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); goTo(tour.i - 1); }
     else if (e.key === "Escape") endTour();
   });
@@ -676,4 +714,9 @@
     map.flyToBounds([[sv.south, sv.west], [sv.north, sv.east]], { padding: [10, 10], duration: reduceMotion ? 0 : 0.8 });
   };
   render(!!fromHash);
+  // following a story link while the page is already open
+  addEventListener("hashchange", () => {
+    const st = STORIES.find(s => location.hash === "#story-" + slug(s.value));
+    if (st && st.value !== state.story) selectStory(st.value, true);
+  });
 })();

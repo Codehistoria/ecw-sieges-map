@@ -37,7 +37,8 @@
   /* Stories: read from data/stories.csv (one row per story) if the settings name it, otherwise from the
      "stories" list in the settings file. Each story is { value, label, group, summary, story, order }. */
   async function loadStories(cfg) {
-    const fromSettings = () => (cfg.stories || []).map(s => ({ value: s.value, label: s.label || s.value, group: s.group || "", summary: s.summary || "", story: s.story || "", order: s.sort || "date" }));
+    const tourDefault = ((cfg.tours || {}).default || "visit").toLowerCase() === "route" ? "route" : "visit";
+    const fromSettings = () => (cfg.stories || []).map(s => ({ value: s.value, label: s.label || s.value, group: s.group || "", summary: s.summary || "", story: s.story || "", order: s.sort === "long" ? "long" : "date", tour: s.tour === "route" ? "route" : tourDefault }));
     if (!cfg.data || !cfg.data.stories) return { stories: fromSettings(), problems: [] };
     const { text } = await fetchText(cfg.data.stories, "auto");
     const rows = parseCSV(text).data, problems = [], seen = new Set();
@@ -50,8 +51,12 @@
       if (seen.has(value)) note("Tag", "This tag appears twice in stories.csv; only the first row is used");
       seen.add(value);
       const o = String(r.Order || "date").trim().toLowerCase();
-      if (!orders[o]) note("Order", `"${r.Order}" isn't an order; use date, length or route`);
-      stories.push({ value, label: String(r.Title || value).trim(), group: String(r.Group || "").trim(), summary: String(r.Summary || "").trim(), story: String(r.Story || "").trim(), order: orders[o] || "date" });
+      if (!orders[o]) note("Order", `"${r.Order}" isn't an order; use date or length`);
+      // Tour: "visit" (no lines; places already visited and still to come are faded) or "route" (the route is drawn as the tour goes)
+      const t = String(r.Tour || "").trim().toLowerCase();
+      if (t && t !== "visit" && t !== "route") note("Tour", `"${r.Tour}" isn't a tour style; use visit or route`);
+      const tour = t === "route" || t === "visit" ? t : (o === "route" ? "route" : tourDefault);
+      stories.push({ value, label: String(r.Title || value).trim(), group: String(r.Group || "").trim(), summary: String(r.Summary || "").trim(), story: String(r.Story || "").trim(), order: orders[o] === "long" ? "long" : "date", tour });
     });
     return { stories, problems };
   }

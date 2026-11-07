@@ -330,3 +330,12 @@ footer { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; border-to
 }
 .tour.compact .tour-leg, .tour.compact .tour-when, .tour.compact .tour-head, .tour.compact #tourRead { display: none; }
 .tour.compact .tour-place { font-size: 17px; margin-bottom: 6px; }
+
+/* Tours: fading the places already visited and still to come */
+.leaflet-marker-icon { transition: opacity .35s; }
+.leaflet-marker-icon.t-past { opacity: var(--fade-visited, .5); }
+.leaflet-marker-icon.t-past .sg .dot { filter: saturate(.6); }
+.leaflet-marker-icon.t-next { opacity: var(--fade-to-come, .25); }
+.leaflet-marker-icon.t-next .sg-name { visibility: hidden !important; }
+path.leg-now { animation: leg-march 1.2s linear infinite; }
+@keyframes leg-march { to { stroke-dashoffset: -30; } }

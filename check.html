@@ -67,7 +67,7 @@
 
   <h2 id="s-stories">Stories <span class="n" id="nStories">…</span></h2>
   <p class="lede">The stories come from <code>data/stories.csv</code>; a siege joins a story when its <b>Tags</b> (or <b>Themes</b>) column names the story's Tag. Separate several tags with a semicolon. Stories with no sieges, and tags with no story, are listed under Spreadsheet problems.</p>
-  <div class="wrap"><table><thead><tr><th>Group</th><th>Tag</th><th>Title</th><th>Order</th><th>Sieges</th></tr></thead><tbody id="stories"></tbody></table></div>
+  <div class="wrap"><table><thead><tr><th>Group</th><th>Tag</th><th>Title</th><th>Order</th><th>Tour</th><th>Sieges</th></tr></thead><tbody id="stories"></tbody></table></div>
 
   <h2>Rows not shown on the map <span class="n" id="nSkipped">…</span></h2>
   <div class="wrap"><table><thead><tr><th>Row</th><th>ID</th><th>Place</th><th>Why</th></tr></thead><tbody id="skipped"></tbody></table></div>
@@ -77,7 +77,7 @@
   <div class="wrap"><table><thead><tr><th>ID</th><th>Place</th><th>Column</th><th>Issue</th><th>What was done</th><th>Status</th></tr></thead><tbody id="review"></tbody></table></div>
 </main>
 <script src="js/vendor/papaparse.min.js"></script>
-<script src="js/data.js?v=20261107-2"></script>
+<script src="js/data.js?v=20261107-3"></script>
 <script>
 (async function () {
   const { loadConfig, loadStories, fetchText, parseCSV, buildRecords, imageURL } = window.SiegeData;
@@ -151,10 +151,10 @@
     if (encoding !== "utf-8") problems.unshift({ row: "", id: "", place: "", field: "Whole file", message: `Saved as ${encoding}, not UTF-8. In Excel use File › Save As › "CSV UTF-8 (Comma delimited)".` });
     parsed.errors.slice(0, 20).forEach(e => problems.push({ row: (e.row ?? 0) + 2, id: "", place: "", field: "CSV", message: e.message }));
     const inStory = (d, v) => d.t === v || (d.tags || []).includes(v);
-    const storyRows = cfg.stories.map(st => ({ group: st.group, tag: st.value, title: st.label, order: st.order === "long" ? "length" : st.order, n: records.filter(d => inStory(d, st.value)).length }));
+    const storyRows = cfg.stories.map(st => ({ group: st.group, tag: st.value, title: st.label, order: st.order === "long" ? "length" : st.order, tour: st.tour, n: records.filter(d => inStory(d, st.value)).length }));
     storyRows.filter(r => !r.n).forEach(r => storyProblems.push({ row: "", id: r.tag, place: r.title, field: "stories.csv: Tag", message: "No siege has this tag, so the story would be empty" }));
     problems.push(...storyProblems);
-    fill("stories", storyRows, ["group", "tag", "title", "order", { k: "n", cls: "num" }], "No stories.");
+    fill("stories", storyRows, ["group", "tag", "title", "order", "tour", { k: "n", cls: "num" }], "No stories.");
     badge("nStories", storyRows.length, "ok");
     fill("problems", problems, [{ k: "row", cls: "num" }, "id", "place", "field", "message"], "No problems found.");
     fill("skipped", skipped, [{ k: "row", cls: "num" }, "id", "place", "reason"], "Every row is on the map.");

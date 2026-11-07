@@ -58,7 +58,14 @@ A row with no dates, no sides and no outcome (like the "London" introduction row
 
 ## Stories
 
-A story picks out sieges that share a thread: how they ended (stormed, starved out, relieved…), a campaign or place (Newark's outposts, after Naseby, ports and the sea…), a commander's trail, or a theme (churches, family homes, turncoats, townspeople). On the map, choosing a story filters the sieges, shows an account of what connects them, and offers **Follow the story**, a tour that visits each siege in turn and says how far, in which direction and how long after the previous one it was. Commanders' stories also draw their route on the map. A story can be linked to directly: the address ends `#story-` and the tag, e.g. `index.html#story-newark-s-ring`.
+A story picks out sieges that share a thread: how they ended (stormed, starved out, relieved…), a campaign or place (Newark's outposts, after Naseby, ports and the sea…), a commander's trail, or a theme (churches, family homes, turncoats, townspeople). On the map, choosing a story filters the sieges, shows an account of what connects them, and offers **Follow the story**, a tour that visits each siege in turn and says how far, in which direction and how long after the previous one it was.
+
+Each story's tour takes one of two styles, set in the Tour column:
+
+- **visit**: no lines. The siege being visited stands out; places already visited are faded, and places still to come are faded further. Right for stories that simply gather sieges by theme or date.
+- **route**: a journey. Before the tour the whole route shows as a grey dashed line, as an overview. During the tour the route is drawn in leg by leg, each leg coloured by who prevailed at the siege it leads to, so the route ahead stays hidden. After the last siege, **Finish** steps back to show the whole coloured route. Used for the commanders' trails.
+
+How faded the visited and still-to-come places are is set in `config/config.json` under `tours`. A story can be linked to directly: the address ends `#story-` and the tag, e.g. `index.html#story-newark-s-ring`.
 
 Stories live in `data/stories.csv`, one row each:
 
@@ -69,7 +76,8 @@ Stories live in `data/stories.csv`, one row each:
 | Title | The story's name on its button and panel. |
 | Summary | One sentence, shown in italics and when hovering the button. |
 | Story | The account that connects the sieges. Leave a blank line between paragraphs. |
-| Order | How the tour runs: `date` (oldest first), `length` (longest first) or `route` (date order, with a line drawn between the sieges). |
+| Order | The order of the tour: `date` (oldest first) or `length` (longest first). |
+| Tour | `visit` or `route` (see above). If empty, the `tours.default` setting is used. |
 
 To add a siege to a story, add the story's Tag to that row's Tags column. To make a new story, add a row to `stories.csv` and tag the sieges. The checker lists stories with no sieges and tags that match no story (usually a spelling slip).
 
