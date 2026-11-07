@@ -69,6 +69,8 @@ The story buttons (the old story-map tabs). `value` matches the spreadsheet's Th
 | `groupSiegesWithinKm` | Sieges closer than this share one marker with a counter. `0` turns grouping off. |
 | `markerScale` | Make all circles bigger (`1.3`) or smaller (`0.8`). |
 | `showRivers`, `showCities`, `showCompass`, `showTitleBox` | `true` or `false`. |
+| `showTownsAtStart` | Whether the "Towns" switch on the map starts on (`true`) or off (`false`). |
+| `fadeTownsWhenFiltered` | `true` fades the town names while a story or year is chosen, so the chosen sieges stand alone. |
 | `smallTownsFromZoom` | Zoom level at which "minor" cities appear. |
 | `townsFromZoom` | Zoom level at which the 17th-century market towns (tier `town`) appear. |
 | `siegeNamesFromZoom` | Zoom level at which each siege's name appears under its circle. A siege name is left out when a town of the same name is labelled right there. |

@@ -94,6 +94,8 @@
     "markerScale": 1.0,
     "showRivers": true,
     "showCities": true,
+    "showTownsAtStart": true,
+    "fadeTownsWhenFiltered": true,
     "smallTownsFromZoom": 6.75,
     "townsFromZoom": 7.5,
     "siegeNamesFromZoom": 8,
