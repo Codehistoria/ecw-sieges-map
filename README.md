@@ -17,7 +17,7 @@ data/
   cities.csv            towns and cities of the 1640s shown on the map
   basemap/
     coastline.geojson   coastline of Britain and Ireland (Natural Earth)
-    rivers.geojson      Thames, Severn, Trent, Ouse and Humber
+    rivers.geojson      main rivers (Natural Earth, plus the Yorkshire Ouse), trimmed to the coastline
 images/                 photos, named exactly as in the spreadsheet's Image columns
 css/map.css             the look of the page
 js/map.js               how the map works
@@ -68,7 +68,7 @@ Everything you might want to change sits in `config/config.json`: the titles and
 
 To edit it on GitHub, open the file and click the pencil icon. Keep the quote marks and commas. If the page then says the settings file has a mistake, it tells you roughly which line to look at.
 
-The towns and cities on the map come from `data/cities.csv` (Name, Latitude, Longitude, Tier, Note). Tier is `capital`, `major` or `minor`; minor towns appear once you zoom in.
+The towns and cities on the map come from `data/cities.csv` (Name, Latitude, Longitude, Tier, Note). Tier is `capital`, `major`, `minor` or `town`. Minor cities appear after one zoom step; `town` (market towns, boroughs and cathedral cities that existed before 1650) appears closer in. Only add places that existed at the time, under the name used then (e.g. Londonderry). The Note shows when you hover over the name.
 
 ## Putting it online with GitHub Pages
 

@@ -192,3 +192,15 @@ footer { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; border-to
 /* Shown only if the settings file or spreadsheet can't be read */
 .notice { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 900; max-width: min(460px, 86%); padding: 14px 18px; background: var(--paper); border: 1px solid var(--ink); box-shadow: 0 3px 14px rgba(40, 28, 10, .35); font-family: var(--f-ui); font-size: 14px; line-height: 1.45; }
 .pop figure img:not(.ok) { min-height: 140px; background: var(--paper-deep); }
+
+/* 17th-century market towns: shown from config map.townsFromZoom */
+.city.town { font-size: 11.5px; color: var(--ink-soft); }
+.city.town::before { width: 4px; height: 4px; left: -8px; margin-top: -3px; box-shadow: none; background: var(--ink-soft); border-color: var(--ink-soft); }
+.leaflet-container.no-towns .city.town { display: none; }
+
+/* Siege names under the markers: shown from config map.siegeNamesFromZoom */
+.sg-name { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 2px; white-space: nowrap; pointer-events: none;
+  font-family: var(--f-display); font-style: italic; font-size: 12px; line-height: 1.1; color: var(--ink);
+  text-shadow: 0 0 2px var(--paper), 0 0 3px var(--paper), 0 0 4px var(--paper), 0 0 5px var(--paper); }
+.leaflet-container.no-siege-names .sg-name { display: none; }
+.sg.unknown .sg-name { color: var(--ink); }

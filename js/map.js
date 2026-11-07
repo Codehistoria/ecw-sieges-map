@@ -136,6 +136,8 @@
   (M.labels || []).forEach(l => L.marker([l.lat, l.lng], { interactive: false, keyboard: false,
     icon: L.divIcon({ className: "", html: `<div class="lbl ${l.style === "sea" ? "sea" : "realm"}">${esc(l.text)}</div>`, iconSize: [0, 0] }) }).addTo(map));
 
+  // Towns and cities of the period. Tier: capital, major, minor (shown from smallTownsFromZoom), town (shown from townsFromZoom).
+  const PLACES = [];
   if (M.showCities !== false && cfg.data.cities) {
     try {
       const { text } = await fetchText(cfg.data.cities, "auto");
@@ -143,14 +145,22 @@
       parseCSV(text).data.forEach(c => {
         const lat = parseFloat(c.Latitude), lng = parseFloat(c.Longitude);
         if (!c.Name || !isFinite(lat) || !isFinite(lng)) return;
-        const tier = ["capital", "major"].includes((c.Tier || "").trim().toLowerCase()) ? c.Tier.trim().toLowerCase() : "minor";
+        const t = (c.Tier || "").trim().toLowerCase();
+        const tier = ["capital", "major", "minor", "town"].includes(t) ? t : "town";
+        PLACES.push({ name: c.Name.trim(), lat, lng });
         L.marker([lat, lng], { pane: "cities", interactive: false, keyboard: false,
-          icon: L.divIcon({ className: "", html: `<div class="city ${tier}">${esc(c.Name)}</div>`, iconSize: [0, 0] }) }).addTo(map);
+          icon: L.divIcon({ className: "", html: `<div class="city ${tier}"${c.Note ? ` title="${esc(c.Note)}"` : ""}>${esc(c.Name)}</div>`, iconSize: [0, 0] }) }).addTo(map);
       });
-      const zoomClass = () => map.getContainer().classList.toggle("far", map.getZoom() < (M.smallTownsFromZoom || 6.75));
-      map.on("zoomend", zoomClass); zoomClass();
     } catch (e) { console.warn(e); }
   }
+  // Labels appear in stages as you zoom in: small towns, then 17th-century towns, then the names of the sieges.
+  const zoomClasses = () => {
+    const z = map.getZoom(), el = map.getContainer();
+    el.classList.toggle("far", z < (M.smallTownsFromZoom ?? 6.75));
+    el.classList.toggle("no-towns", z < (M.townsFromZoom ?? 7.5));
+    el.classList.toggle("no-siege-names", z < (M.siegeNamesFromZoom ?? 8));
+  };
+  map.on("zoomend", zoomClasses); zoomClasses();
   map.on("popupopen", () => document.querySelector(".plate").classList.add("popup-open"));
   map.on("popupclose", () => document.querySelector(".plate").classList.remove("popup-open"));
 
@@ -175,8 +185,17 @@
       bg = "conic-gradient(" + members.map((m, j) => `${colour(m.w)} ${(j * step).toFixed(2)}% ${((j + 1) * step).toFixed(2)}%`).join(", ") + ")";
     }
     const cls = "sg" + (multi ? " multi" : "") + (!known.length ? " unknown" : "");
+    const name = siegeName(members);
     return { r, icon: L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -size / 2],
-      html: `<div class="${cls}" style="--c:${c};width:${size}px;height:${size}px;background:${bg}">${multi ? `<span class="badge">${members.length}</span>` : ""}</div>` }) };
+      html: `<div class="${cls}" style="--c:${c};width:${size}px;height:${size}px;background:${bg}">${multi ? `<span class="badge">${members.length}</span>` : ""}${name ? `<span class="sg-name">${esc(name)}</span>` : ""}</div>` }) };
+  }
+
+  // The name shown under a siege marker once zoomed in. Left out when a town label with the same name sits within 8 km.
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g, "");
+  function siegeName(members) {
+    const names = [...new Set(members.map(m => m.p))];
+    const shown = names.filter(n => !PLACES.some(t => norm(t.name) === norm(n) && km(t, members[0]) < 8));
+    return shown.join(" & ");
   }
 
   GROUPS.forEach(g => {

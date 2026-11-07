@@ -95,6 +95,8 @@
     "showRivers": true,
     "showCities": true,
     "smallTownsFromZoom": 6.75,
+    "townsFromZoom": 7.5,
+    "siegeNamesFromZoom": 8,
     "showCompass": true,
     "showTitleBox": true,
     "titleBox": { "title": "A Mapp of the Sieges", "subtitle": "IN THE LATE WARRES · MDCXL–MDCLIV" },
