@@ -27,6 +27,7 @@ Colours are written as hex codes like `"#9a1c2c"`. Any colour picker gives you o
 | `cities` | The towns spreadsheet. Set to `""` to show no towns. |
 | `coastline`, `rivers` | Map outlines (GeoJSON). |
 | `stories` | The stories file (`data/stories.csv`; see the main README). Remove this line to fall back to the `stories` list below. |
+| `storySteps` | The tour notes file (`data/story-steps.csv`): one line per story and siege saying why it's in the story. |
 | `encoding` | `"auto"` reads UTF-8 and falls back to Excel's Windows format. Leave as `"auto"`. |
 
 ## `columns`: spreadsheet headings

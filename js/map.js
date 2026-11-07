@@ -2,7 +2,7 @@
    Reads config/config.json and data/sieges.csv each time it loads, so changes to either show on the next refresh. */
 (async function () {
   "use strict";
-  const { loadConfig, loadStories, fetchText, parseCSV, buildRecords, imageURL, fmtOne, fmtRange } = window.SiegeData;
+  const { loadConfig, loadStories, loadSteps, fetchText, parseCSV, buildRecords, imageURL, fmtOne, fmtRange } = window.SiegeData;
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -30,6 +30,9 @@
   const SIDE = Object.fromEntries(SIDES.map(s => [s.key, s]));
   const colour = k => (SIDE[k] && SIDE[k].colour) || "#777777";
   const STORIES = cfg.stories || [];
+  let STEPS = new Map();
+  try { STEPS = await loadSteps(cfg); } catch (e) { console.warn("Step notes couldn't be read", e); }
+  const sideKey = v => (SIDES.find(s => s.value.toLowerCase() === String(v || "").toLowerCase()) || {}).key;
   const STORY = Object.fromEntries(STORIES.map(s => [s.value, s]));
   const inStory = (d, v) => d.t === v || (d.tags || []).includes(v);
   const Y0 = cfg.years.from, Y1 = cfg.years.to;
@@ -427,7 +430,7 @@
         <button type="button" class="chip" id="storyClear">Show all sieges</button>
       </div>
       <p class="sc-how">${st.tour === "route"
-        ? (routeDone === st.value ? "Tour complete: the full route is coloured by who prevailed at each siege it leads to." : "The grey line is the whole route. Following the story draws it in leg by leg, each coloured by who prevailed at the siege it leads to.")
+        ? (routeDone === st.value ? "Tour complete: the whole route is shown." : "The grey line is the whole route. Following the story draws it in leg by leg.")
         : `The tour visits the sieges ${st.order === "long" ? "from the longest to the shortest" : "in date order"}; places already visited and those still to come are faded.`}</p>`;
     $("tourStart").onclick = () => startTour();
     $("storyClear").onclick = () => selectStory(null, false);
@@ -449,12 +452,13 @@
       const seq = tour ? tour.list : storySeq(st.value);
       const upto = tour ? tour.i : seq.length - 1;
       const coloured = !!tour || routeDone === st.value;
+      const lineColour = colour(sideKey(st.side)) === "#777777" ? (col.ink || "#2a2017") : colour(sideKey(st.side));   // the commander's side
       for (let k = 1; k <= upto; k++) {
         const a = seq[k - 1], b = seq[k];
         if (!dated(a) || !dated(b) || km(a, b) < 1) continue;
         if (!coloured) legLine(a, b, { color: col.ink || "#2a2017", weight: 1.6, opacity: .45, dashArray: "5 6" });
-        else if (tour && k === upto) legLine(a, b, { color: b.w ? colour(b.w) : (col.ink || "#2a2017"), weight: 4, opacity: .95, dashArray: "9 6", className: "leg-now" });
-        else legLine(a, b, { color: b.w ? colour(b.w) : (col.ink || "#2a2017"), weight: 2.6, opacity: .8 });
+        else if (tour && k === upto) legLine(a, b, { color: lineColour, weight: 4, opacity: .95, dashArray: "9 6", className: "leg-now" });
+        else legLine(a, b, { color: lineColour, weight: 2.6, opacity: .75 });
       }
     }
     if (tour) {
@@ -548,7 +552,8 @@
     tourEl.querySelector(".tour-step").textContent = `${tour.i + 1} of ${n}`;
     tourEl.querySelector(".tour-place").textContent = d.p;
     tourEl.querySelector(".tour-when").innerHTML = [esc(fmtRange(d.s, d.e)) + (d.dl ? " · " + esc(d.dl) : ""), d.w ? `<span class="pill" style="color:${colour(d.w)}"><i></i>${esc(SIDE[d.w].label)} prevailed</span>` : ""].filter(Boolean).join(" ");
-    tourEl.querySelector(".tour-head").textContent = d.h || "";
+    // why this siege belongs to the story (data/story-steps.csv), or the siege's own headline
+    tourEl.querySelector(".tour-head").textContent = STEPS.get(state.story + "|" + d.id) || d.h || "";
     tourEl.querySelector(".tour-leg").textContent = tour.i ? legText(tour.list[tour.i - 1], d) : (n > 1 ? `The first of ${n} sieges in this story.` : "The only siege in this story.");
     $("tourPrev").disabled = tour.i === 0;
     $("tourNext").innerHTML = tour.i === n - 1 ? (st && st.tour === "route" ? "Finish: see the whole route" : "Finish") : `Next <span aria-hidden="true">›</span>`;

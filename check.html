@@ -77,10 +77,10 @@
   <div class="wrap"><table><thead><tr><th>ID</th><th>Place</th><th>Column</th><th>Issue</th><th>What was done</th><th>Status</th></tr></thead><tbody id="review"></tbody></table></div>
 </main>
 <script src="js/vendor/papaparse.min.js"></script>
-<script src="js/data.js?v=20261107-3"></script>
+<script src="js/data.js?v=20261107-4"></script>
 <script>
 (async function () {
-  const { loadConfig, loadStories, fetchText, parseCSV, buildRecords, imageURL } = window.SiegeData;
+  const { loadConfig, loadStories, fetchText, parseCSV: parseAny, parseCSV, buildRecords, imageURL } = window.SiegeData;
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const show = s => esc(s).replace(/^ | $/g, "␣");   // make leading/trailing spaces visible
@@ -153,6 +153,24 @@
     const inStory = (d, v) => d.t === v || (d.tags || []).includes(v);
     const storyRows = cfg.stories.map(st => ({ group: st.group, tag: st.value, title: st.label, order: st.order === "long" ? "length" : st.order, tour: st.tour, n: records.filter(d => inStory(d, st.value)).length }));
     storyRows.filter(r => !r.n).forEach(r => storyProblems.push({ row: "", id: r.tag, place: r.title, field: "stories.csv: Tag", message: "No siege has this tag, so the story would be empty" }));
+    // step notes: each row should name a story and a siege that is in it
+    if (cfg.data.storySteps) {
+      try {
+        const steps = parseAny((await fetchText(cfg.data.storySteps, "auto")).text).data;
+        const byId = new Map(records.map(d => [d.id, d]));
+        steps.forEach((r, i) => {
+          const tag = String(r.Tag || "").trim(), id = String(r.ID || "").trim();
+          if (!tag && !id) return;
+          const d = byId.get(id), where = { row: i + 2, id, place: r.Place || "" };
+          if (!cfg.stories.some(s => s.value === tag)) storyProblems.push({ ...where, field: "story-steps.csv: Tag", message: `"${tag}" isn't a story in stories.csv` });
+          else if (!d) storyProblems.push({ ...where, field: "story-steps.csv: ID", message: `No siege has the ID "${id}"` });
+          else if (!inStory(d, tag)) storyProblems.push({ ...where, field: "story-steps.csv", message: `This siege isn't tagged "${tag}", so the note is never shown` });
+        });
+        const have = new Set(steps.map(r => String(r.Tag || "").trim() + "|" + String(r.ID || "").trim()));
+        const missingNotes = cfg.stories.reduce((n, st) => n + records.filter(d => inStory(d, st.value) && !have.has(st.value + "|" + d.id)).length, 0);
+        if (missingNotes) storyProblems.push({ row: "", id: "", place: "", field: "story-steps.csv", message: `${missingNotes} story stops have no note, so the tour shows the siege's headline instead` });
+      } catch (e) { storyProblems.push({ row: "", id: "", place: "", field: "story-steps.csv", message: e.message }); }
+    }
     problems.push(...storyProblems);
     fill("stories", storyRows, ["group", "tag", "title", "order", "tour", { k: "n", cls: "num" }], "No stories.");
     badge("nStories", storyRows.length, "ok");

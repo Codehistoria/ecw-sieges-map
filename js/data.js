@@ -56,9 +56,22 @@
       const t = String(r.Tour || "").trim().toLowerCase();
       if (t && t !== "visit" && t !== "route") note("Tour", `"${r.Tour}" isn't a tour style; use visit or route`);
       const tour = t === "route" || t === "visit" ? t : (o === "route" ? "route" : tourDefault);
-      stories.push({ value, label: String(r.Title || value).trim(), group: String(r.Group || "").trim(), summary: String(r.Summary || "").trim(), story: String(r.Story || "").trim(), order: orders[o] === "long" ? "long" : "date", tour });
+      stories.push({ value, label: String(r.Title || value).trim(), group: String(r.Group || "").trim(), summary: String(r.Summary || "").trim(), story: String(r.Story || "").trim(), order: orders[o] === "long" ? "long" : "date", tour, side: String(r.Side || "").trim() });
     });
     return { stories, problems };
+  }
+
+  /* Step notes: data/story-steps.csv gives, for each story and siege, a line saying why that siege is part of
+     the story. Returns a Map keyed "Tag|ID". */
+  async function loadSteps(cfg) {
+    const notes = new Map();
+    if (!cfg.data || !cfg.data.storySteps) return notes;
+    const { text } = await fetchText(cfg.data.storySteps, "auto");
+    parseCSV(text).data.forEach(r => {
+      const tag = String(r.Tag || "").trim(), id = String(r.ID || "").trim(), note = String(r.Note || "").trim();
+      if (tag && id && note) notes.set(tag + "|" + id, note);
+    });
+    return notes;
   }
 
   // Dates: "1644/7/2", "1644/7/", "1644//", "1644-07-02", "2/7/1644", "1644". Returns [y, m, d] with nulls, or null if unreadable.
@@ -210,5 +223,5 @@
     return `${fmtOne(s)} – ${fmtOne(e)}`;
   }
 
-  window.SiegeData = { fetchText, loadConfig, loadStories, parseCSV, buildRecords, imageURL, fmtOne, fmtRange, parseDate };
+  window.SiegeData = { fetchText, loadConfig, loadStories, loadSteps, parseCSV, buildRecords, imageURL, fmtOne, fmtRange, parseDate };
 })();

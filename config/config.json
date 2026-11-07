@@ -23,6 +23,7 @@
     "coastline": "data/basemap/coastline.geojson",
     "rivers": "data/basemap/rivers.geojson",
     "stories": "data/stories.csv",
+    "storySteps": "data/story-steps.csv",
     "encoding": "auto"
   },
 

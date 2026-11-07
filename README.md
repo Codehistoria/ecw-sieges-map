@@ -14,7 +14,8 @@ config/
   README.md             what every setting does
 data/
   sieges.csv            THE SPREADSHEET: one row per siege
-  stories.csv           the stories: title, group, summary, the account that links the sieges, tour order
+  stories.csv           the stories: title, group, summary, the account that links the sieges, tour order and style
+  story-steps.csv       for each story and siege, the line the tour shows about why it's in the story
   known-issues.csv      problems found by reading the data against the history (shown on the checker)
   cities.csv            towns and cities of the 1640s shown on the map
   basemap/
@@ -63,7 +64,7 @@ A story picks out sieges that share a thread: how they ended (stormed, starved o
 Each story's tour takes one of two styles, set in the Tour column:
 
 - **visit**: no lines. The siege being visited stands out; places already visited are faded, and places still to come are faded further. Right for stories that simply gather sieges by theme or date.
-- **route**: a journey. Before the tour the whole route shows as a grey dashed line, as an overview. During the tour the route is drawn in leg by leg, each leg coloured by who prevailed at the siege it leads to, so the route ahead stays hidden. After the last siege, **Finish** steps back to show the whole coloured route. Used for the commanders' trails.
+- **route**: a journey. Before the tour the whole route shows as a grey dashed line, as an overview. During the tour the route is drawn in leg by leg in the colour of the commander's side, so the route ahead stays hidden. After the last siege, **Finish** steps back to show the whole coloured route. Used for the commanders' trails.
 
 How faded the visited and still-to-come places are is set in `config/config.json` under `tours`. A story can be linked to directly: the address ends `#story-` and the tag, e.g. `index.html#story-newark-s-ring`.
 
@@ -78,6 +79,9 @@ Stories live in `data/stories.csv`, one row each:
 | Story | The account that connects the sieges. Leave a blank line between paragraphs. |
 | Order | The order of the tour: `date` (oldest first) or `length` (longest first). |
 | Tour | `visit` or `route` (see above). If empty, the `tours.default` setting is used. |
+| Side | For `route` stories: the commander's side (`Royalists`, `Parliamentarians` or `Scots`), which sets the colour of the route. |
+
+Each stop on a tour shows a line saying why that siege is part of the story. These live in `data/story-steps.csv`: one row per story and siege, with the columns Tag, ID, Place (just for reference) and Note. Edit a Note to change what the tour says; if a stop has no row, the tour shows the siege's Headline instead. When you tag a siege into a story, add a row here too. The checker lists notes that point at the wrong story or siege, and counts stops with no note.
 
 To add a siege to a story, add the story's Tag to that row's Tags column. To make a new story, add a row to `stories.csv` and tag the sieges. The checker lists stories with no sieges and tags that match no story (usually a spelling slip).
 
