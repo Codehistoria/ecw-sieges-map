@@ -12,19 +12,21 @@
   body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Alegreya Sans", system-ui, sans-serif; font-size: 15px; line-height: 1.45; }
   main { max-width: 1100px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-left, 0px)) 48px; }
   h1 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 34px; margin: 0 0 4px; }
-  h2 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 23px; margin: 32px 0 8px; display: flex; gap: 10px; align-items: baseline; }
+  h2 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 23px; margin: 34px 0 6px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
   h2 .n { font-family: "Alegreya Sans", sans-serif; font-size: 13px; padding: 1px 9px; border-radius: 999px; border: 1px solid currentColor; }
-  .lede { color: var(--soft); max-width: 70ch; margin: 0 0 18px; }
-  .summary { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 10px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+  .lede { color: var(--soft); max-width: 72ch; margin: 0 0 12px; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 14px 0 0; font-size: 14px; }
+  .summary { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 10px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-top: 14px; font-variant-numeric: tabular-nums; }
   .summary b { font-size: 18px; }
   .ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--warn); }
   .wrap { overflow-x: auto; border: 1px solid var(--rule); background: #f6efdb; }
   table { border-collapse: collapse; width: 100%; font-size: 14px; }
   th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #e0d2ad; vertical-align: top; }
-  th { background: var(--paper-deep); font-weight: 600; position: sticky; top: 0; }
+  th { background: var(--paper-deep); font-weight: 600; }
   td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
-  code { font-size: 13px; background: #fff8e6; padding: 0 4px; border-radius: 2px; }
+  td code, .tip code { font-size: 13px; background: #fff8e6; padding: 0 4px; border-radius: 2px; white-space: pre; }
   .empty { padding: 12px; color: var(--soft); font-style: italic; }
+  .chip { display: inline-block; font-size: 12px; padding: 0 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
   a { color: var(--bad); }
   .tip { background: #f6efdb; border: 1px dashed var(--rule); padding: 10px 14px; margin-top: 10px; max-width: 80ch; }
 </style>
@@ -32,22 +34,42 @@
 <body>
 <main>
   <h1>Siege map data check</h1>
-  <p class="lede">This page reads the same settings file and spreadsheet as the map and lists anything that needs fixing. Fix the spreadsheet, save it as <b>CSV UTF-8</b>, upload it over <code>data/sieges.csv</code>, then refresh this page. <a href="index.html">Back to the map</a></p>
+  <p class="lede">This page reads the same settings, spreadsheet and photo folder as the map and lists anything that needs fixing. Fix the spreadsheet, save it as <b>CSV UTF-8</b>, upload it over <code>data/sieges.csv</code>, then refresh this page. <a href="index.html">Back to the map</a></p>
   <div class="summary" id="summary">Checking…</div>
+  <nav>
+    <a href="#s-photos-near">Photo names that nearly match</a>
+    <a href="#s-photos-missing">Photos not found</a>
+    <a href="#s-photos-unused">Unused photos</a>
+    <a href="#s-sheet">Spreadsheet problems</a>
+    <a href="#s-review">Issues found in review</a>
+  </nav>
 
-  <h2>Spreadsheet problems <span class="n" id="nProblems">…</span></h2>
+  <h2 id="s-photos-near">Photo names that nearly match <span class="n" id="nNear">…</span></h2>
+  <p class="lede">The spreadsheet names a photo, and the folder has one with almost the same name. Usually capital letters, the ending (<code>.JPG</code> or <code>.jpg</code>) or a stray space. Either rename the file on GitHub, or change the spreadsheet to match.</p>
+  <div class="wrap"><table><thead><tr><th>Row</th><th>Place</th><th>Spreadsheet says</th><th>Folder has</th><th>Difference</th></tr></thead><tbody id="near"></tbody></table></div>
+
+  <h2 id="s-photos-missing">Photos named in the spreadsheet but not in the folder <span class="n" id="nMissing">…</span></h2>
+  <div class="wrap"><table><thead><tr><th>Row</th><th>Place</th><th>Column</th><th>File name in spreadsheet</th></tr></thead><tbody id="missing"></tbody></table></div>
+
+  <h2 id="s-photos-unused">Photos in the folder that no row uses <span class="n" id="nUnused">…</span></h2>
+  <p class="lede">These files are uploaded but not named in any Image column, so they never appear. The last column suggests a siege whose place name resembles the file name.</p>
+  <div class="wrap"><table><thead><tr><th>File</th><th>Size</th><th>Possibly for</th></tr></thead><tbody id="unused"></tbody></table></div>
+  <div class="tip" id="folderNote"></div>
+
+  <h2 id="s-large">Large photos <span class="n" id="nLarge">…</span></h2>
+  <p class="lede">Photos over 1 MB slow the pop-ups down. About 1200 pixels wide keeps them sharp and small.</p>
+  <div class="wrap"><table><thead><tr><th>File</th><th>Size</th></tr></thead><tbody id="large"></tbody></table></div>
+
+  <h2 id="s-sheet">Spreadsheet problems <span class="n" id="nProblems">…</span></h2>
+  <p class="lede">Found automatically each time this page loads.</p>
   <div class="wrap"><table><thead><tr><th>Row</th><th>ID</th><th>Place</th><th>Column</th><th>Problem</th></tr></thead><tbody id="problems"></tbody></table></div>
 
   <h2>Rows not shown on the map <span class="n" id="nSkipped">…</span></h2>
   <div class="wrap"><table><thead><tr><th>Row</th><th>ID</th><th>Place</th><th>Why</th></tr></thead><tbody id="skipped"></tbody></table></div>
 
-  <h2>Photos named in the spreadsheet but not found <span class="n" id="nMissing">…</span></h2>
-  <div class="wrap"><table><thead><tr><th>Row</th><th>Place</th><th>Column</th><th>File name in spreadsheet</th><th>Looked for</th></tr></thead><tbody id="missing"></tbody></table></div>
-  <div class="tip">Names must match exactly, including capital letters, spaces and the ending (<code>.jpg</code> is not the same as <code>.JPG</code>). Put photos in the <code>images</code> folder.</div>
-
-  <h2>Large photos <span class="n" id="nLarge">…</span></h2>
-  <p class="lede">Photos over 1 MB slow the map down. Resizing them to about 1200 pixels wide keeps them sharp and small.</p>
-  <div class="wrap"><table><thead><tr><th>File</th><th>Size</th></tr></thead><tbody id="large"></tbody></table></div>
+  <h2 id="s-review">Issues found in review <span class="n" id="nReview">…</span></h2>
+  <p class="lede">Problems spotted by reading the data against the history, which no automatic check can catch: outcomes that contradict the write-up, dates in the wrong year, markers far from their town. Kept in <code>data/known-issues.csv</code>; change a row's Status to <b>Resolved</b> once it's dealt with.</p>
+  <div class="wrap"><table><thead><tr><th>ID</th><th>Place</th><th>Column</th><th>Issue</th><th>What was done</th><th>Status</th></tr></thead><tbody id="review"></tbody></table></div>
 </main>
 <script src="js/vendor/papaparse.min.js"></script>
 <script src="js/data.js"></script>
@@ -56,11 +78,61 @@
   const { loadConfig, fetchText, parseCSV, buildRecords, imageURL } = window.SiegeData;
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const show = s => esc(s).replace(/^ | $/g, "␣");   // make leading/trailing spaces visible
   const fill = (id, rows, cols, emptyMsg) => {
-    $(id).innerHTML = rows.length ? rows.map(r => "<tr>" + cols.map(c => `<td${typeof c === "object" ? ` class="${c.cls}"` : ""}>${esc(r[typeof c === "object" ? c.k : c])}</td>`).join("") + "</tr>").join("")
-      : `<tr><td colspan="${cols.length}" class="empty">${esc(emptyMsg)}</td></tr>`;
+    $(id).innerHTML = rows.length ? rows.map(r => "<tr>" + cols.map(c => {
+      const k = typeof c === "object" ? c.k : c, cls = typeof c === "object" && c.cls ? ` class="${c.cls}"` : "";
+      return `<td${cls}>${typeof c === "object" && c.html ? r[k] : esc(r[k])}</td>`;
+    }).join("") + "</tr>").join("") : `<tr><td colspan="${cols.length}" class="empty">${esc(emptyMsg)}</td></tr>`;
   };
-  const badge = (id, n) => { $(id).textContent = n; $(id).className = "n " + (n ? "bad" : "ok"); };
+  const badge = (id, n, kind) => { $(id).textContent = n; $(id).className = "n " + (n ? (kind || "bad") : "ok"); };
+  const mb = n => n == null ? "" : n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.round(n / 1024) + " KB";
+
+  // Compare file names the way a person would: ignore capitals, the ending, spaces, dashes and underscores.
+  const stem = f => String(f).trim().replace(/\.[a-z0-9]{2,4}$/i, "");
+  const key = f => stem(f).toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[’'`]/g, "").replace(/[\s_\-.]+/g, " ").trim();
+  function similarity(a, b) {
+    if (a === b) return 1;
+    const m = a.length, n = b.length; if (!m || !n) return 0;
+    let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) {
+      const cur = [i];
+      for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+    return 1 - prev[n] / Math.max(m, n);
+  }
+  function describe(want, have) {
+    const d = [];
+    if (want.trim() !== want) d.push("extra space in the spreadsheet");
+    if (have.trim() !== have) d.push("extra space in the file name");
+    const we = (want.trim().match(/\.[^.]+$/) || [""])[0], he = (have.trim().match(/\.[^.]+$/) || [""])[0];
+    if (we.toLowerCase() !== he.toLowerCase()) d.push(`ending ${we || "(none)"} vs ${he || "(none)"}`);
+    else if (we !== he) d.push(`ending ${we} vs ${he}`);
+    if (stem(want) !== stem(have)) d.push(stem(want).toLowerCase() === stem(have).toLowerCase() ? "capital letters" : "spelling or spacing");
+    return d.join("; ") || "spacing";
+  }
+
+  // What's in the photo folder: from GitHub when the settings name the repository, else from images/manifest.json.
+  async function listFolder(cfg, folder) {
+    const gh = cfg.github || {};
+    const dir = folder.replace(/\/$/, "");
+    if (gh.repo) {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${gh.repo}/contents/${dir}?ref=${encodeURIComponent(gh.branch || "main")}`);
+        if (res.ok) {
+          const items = await res.json();
+          return { source: `GitHub (${gh.repo}, ${gh.branch || "main"})`, files: items.filter(i => i.type === "file").map(i => ({ name: i.name, size: i.size })) };
+        }
+      } catch (e) { /* fall through */ }
+    }
+    try {
+      const res = await fetch(`${dir}/manifest.json`, { cache: "no-cache" });
+      if (res.ok) return { source: `${dir}/manifest.json`, files: (await res.json()).map(f => typeof f === "string" ? { name: f } : f) };
+    } catch (e) { /* none */ }
+    return null;
+  }
+
   try {
     const cfg = await loadConfig();
     const { text, encoding } = await fetchText(cfg.data.sieges, cfg.data.encoding);
@@ -69,46 +141,86 @@
     const { records, skipped, problems } = buildRecords(parsed.data, cfg);
     missingCols.forEach(c => problems.unshift({ row: 1, id: "", place: "", field: c, message: "Column not found in the spreadsheet (check the heading, or change \"columns\" in config/config.json)" }));
     if (encoding !== "utf-8") problems.unshift({ row: "", id: "", place: "", field: "Whole file", message: `Saved as ${encoding}, not UTF-8. In Excel use File › Save As › "CSV UTF-8 (Comma delimited)".` });
-    if (parsed.errors.length) parsed.errors.slice(0, 20).forEach(e => problems.push({ row: (e.row ?? 0) + 2, id: "", place: "", field: "CSV", message: e.message }));
-
+    parsed.errors.slice(0, 20).forEach(e => problems.push({ row: (e.row ?? 0) + 2, id: "", place: "", field: "CSV", message: e.message }));
     fill("problems", problems, [{ k: "row", cls: "num" }, "id", "place", "field", "message"], "No problems found.");
     fill("skipped", skipped, [{ k: "row", cls: "num" }, "id", "place", "reason"], "Every row is on the map.");
-    badge("nProblems", problems.length); badge("nSkipped", skipped.length);
+    badge("nProblems", problems.length); badge("nSkipped", skipped.length, "warn");
 
-    // photos
+    /* ---------- photos ---------- */
     const folder = (cfg.images || {}).folder || "images/";
-    const files = new Map();
-    records.forEach(r => r.images.forEach((im, i) => {
-      const k = im.file;
-      if (!files.has(k)) files.set(k, []);
-      files.get(k).push({ row: r.row, place: r.p, col: i ? cfg.columns.image2 : cfg.columns.image });
-    }));
-    const missing = [], large = [];
-    let found = 0;
-    await Promise.all([...files.keys()].map(async f => {
-      const url = imageURL(folder, f);
-      try {
-        const res = await fetch(url, { method: "HEAD", cache: "no-cache" });
-        if (!res.ok) throw 0;
-        found++;
-        const len = +res.headers.get("content-length");
-        if (len > 1024 * 1024) large.push({ file: f, size: (len / 1048576).toFixed(1) + " MB" });
-      } catch (e) {
-        files.get(f).forEach(u => missing.push({ row: u.row, place: u.place, col: u.col, file: f, url: decodeURI(url) }));
-      }
-    }));
-    missing.sort((a, b) => a.row - b.row);
-    fill("missing", missing, [{ k: "row", cls: "num" }, "place", "col", "file", "url"], "Every photo named in the spreadsheet was found.");
+    const refs = [];   // every photo named in the spreadsheet
+    records.forEach(r => r.images.forEach((im, i) => refs.push({ row: r.row, place: r.p, col: i ? cfg.columns.image2 : cfg.columns.image, file: im.file })));
+    const listing = await listFolder(cfg, folder);
+    const near = [], missing = [], large = [];
+    let unused = [], found = 0;
+
+    if (listing) {
+      const files = listing.files.filter(f => /\.(jpe?g|png|gif|webp|avif|svg)$/i.test(f.name));
+      const exact = new Set(files.map(f => f.name));
+      const byKey = new Map(); files.forEach(f => { const k = key(f.name); if (!byKey.has(k)) byKey.set(k, []); byKey.get(k).push(f); });
+      const used = new Set();
+      refs.forEach(ref => {
+        if (exact.has(ref.file)) { found++; used.add(ref.file); return; }
+        const same = byKey.get(key(ref.file));
+        if (same) { same.forEach(f => used.add(f.name)); near.push({ ...ref, have: same[0].name, diff: describe(ref.file, same[0].name) }); return; }
+        // close spelling
+        const k = key(ref.file);
+        let best = null, bestS = 0;
+        files.forEach(f => { const s = similarity(k, key(f.name)); if (s > bestS) { bestS = s; best = f; } });
+        if (best && bestS >= 0.92 && key(ref.file).length >= 6) { used.add(best.name); near.push({ ...ref, have: best.name, diff: `spelling (${Math.round(bestS * 100)}% alike)` }); return; }
+        missing.push(ref);
+      });
+      unused = files.filter(f => !used.has(f.name)).map(f => {
+        const k = key(f.name);
+        let best = null, bestS = 0;
+        records.forEach(r => { const s = Math.max(similarity(k, key(r.p)), k.includes(key(r.p)) && key(r.p).length > 3 ? 0.9 : 0); if (s > bestS) { bestS = s; best = r; } });
+        return { file: f.name, size: mb(f.size), guess: best && bestS >= 0.6 ? `${best.p} (row ${best.row}${best.images.length ? ", already has " + best.images[0].file : ""})` : "" };
+      });
+      files.forEach(f => { if (f.size > 1048576) large.push({ file: f.name, size: mb(f.size) }); });
+      $("folderNote").innerHTML = `Folder contents read from ${esc(listing.source)}: ${files.length} photo file${files.length === 1 ? "" : "s"}.`;
+    } else {
+      // No listing available: check each named photo directly.
+      await Promise.all([...new Set(refs.map(r => r.file))].map(async f => {
+        try {
+          const res = await fetch(imageURL(folder, f), { method: "HEAD", cache: "no-cache" });
+          if (!res.ok) throw 0;
+          found += refs.filter(r => r.file === f).length;
+          const len = +res.headers.get("content-length");
+          if (len > 1048576) large.push({ file: f, size: mb(len) });
+        } catch (e) { refs.filter(r => r.file === f).forEach(r => missing.push(r)); }
+      }));
+      $("folderNote").innerHTML = `Couldn't list the folder, so near-misses and unused photos can't be shown. Put the repository name in <code>"github": { "repo": … }</code> in the settings file.`;
+    }
+    near.sort((a, b) => a.row - b.row); missing.sort((a, b) => a.row - b.row);
+    fill("near", near.map(n => ({ ...n, fileShow: `<code>${show(n.file)}</code>`, haveShow: `<code>${show(n.have)}</code>` })),
+      [{ k: "row", cls: "num" }, "place", { k: "fileShow", html: true }, { k: "haveShow", html: true }, "diff"], "No near-misses.");
+    fill("missing", missing, [{ k: "row", cls: "num" }, "place", "col", "file"], "Every photo named in the spreadsheet is in the folder.");
+    fill("unused", unused, ["file", { k: "size", cls: "num" }, "guess"], listing ? "Every photo in the folder is used." : "Not available.");
     fill("large", large, ["file", { k: "size", cls: "num" }], "No photos over 1 MB.");
-    badge("nMissing", missing.length); badge("nLarge", large.length);
+    badge("nNear", near.length, "warn"); badge("nMissing", missing.length); badge("nUnused", unused.length, "warn"); badge("nLarge", large.length, "warn");
+
+    /* ---------- reviewed issues ---------- */
+    let review = [];
+    try {
+      const { text: kt } = await fetchText("data/known-issues.csv", "auto");
+      review = parseCSV(kt).data;
+      const order = { "Needs checking": 0, "Note": 1, "Fixed in data/sieges.csv": 2, "Resolved": 3 };
+      review.sort((a, b) => (order[a.Status] ?? 1) - (order[b.Status] ?? 1));
+    } catch (e) { /* optional file */ }
+    const statusChip = s => `<span class="chip ${/needs/i.test(s) ? "bad" : /fixed|resolved/i.test(s) ? "ok" : "warn"}">${esc(s)}</span>`;
+    fill("review", review.map(r => ({ ...r, st: statusChip(r.Status || "") })), ["ID", "Place", "Column", "Issue", "What was done", { k: "st", html: true }], "No reviewed issues recorded.");
+    const open = review.filter(r => /needs/i.test(r.Status || "")).length;
+    badge("nReview", open);
 
     const withPhoto = records.filter(r => r.images.length).length;
     $("summary").innerHTML = [
       `<span><b>${records.length}</b> sieges on the map</span>`,
-      `<span><b>${skipped.length}</b> rows left off</span>`,
-      `<span><b>${files.size}</b> photo files named, <b class="${found === files.size ? "ok" : "warn"}">${found}</b> found</span>`,
-      `<span><b>${withPhoto}</b> sieges have a photo named</span>`,
-      `<span>File read as <b>${esc(encoding)}</b></span>`
+      `<span><b>${refs.length}</b> photo references, <b class="${found === refs.length ? "ok" : "warn"}">${found}</b> matched exactly</span>`,
+      `<span><b class="${near.length ? "warn" : "ok"}">${near.length}</b> near-misses</span>`,
+      `<span><b class="${missing.length ? "bad" : "ok"}">${missing.length}</b> missing</span>`,
+      `<span><b>${unused.length}</b> unused photos</span>`,
+      `<span><b class="${open ? "bad" : "ok"}">${open}</b> reviewed issues to check</span>`,
+      `<span>Spreadsheet read as <b>${esc(encoding)}</b></span>`
     ].join("");
   } catch (e) {
     $("summary").innerHTML = `<span class="bad"><b>Couldn't run the check:</b> ${esc(e.message)}</span>`;

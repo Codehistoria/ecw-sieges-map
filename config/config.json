@@ -10,6 +10,12 @@
     "searchPlaceholder": "Find a place or county"
   },
 
+  "github": {
+    "_help": "Where the project lives on GitHub. The data checker uses this to list the photos folder.",
+    "repo": "Codehistoria/ncwc-sieges-map",
+    "branch": "main"
+  },
+
   "data": {
     "sieges": "data/sieges.csv",
     "cities": "data/cities.csv",

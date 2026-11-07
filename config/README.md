@@ -14,6 +14,10 @@ Colours are written as hex codes like `"#9a1c2c"`. Any colour picker gives you o
 | `footer` | The note at the bottom of the side panel (source, date conventions). |
 | `searchPlaceholder` | Grey text in the search box. |
 
+## `github`
+
+`repo` (as `owner/name`) and `branch` tell the data checker where to list the photos folder, so it can spot near-miss file names and unused photos. If you copy the project to another account, change `repo` to match.
+
 ## `data`: where the files are
 
 | Setting | What it does |

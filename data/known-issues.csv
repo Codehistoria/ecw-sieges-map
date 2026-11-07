@@ -1,0 +1,53 @@
+ID,Place,Column,Issue,What was done,Status
+,Whole file,Themes,"Each row has one Themes value, so a siege in a story (e.g. Longest) loses its side tag",Sides taken from MAP Outcome instead,Note
+,Whole file,Casualties,There is no casualties column; 'Bloodiest' exists only as a Themes tag,Pop-ups show duration and outcome instead,Note
+,Whole file,Encoding,"Saved in an old DOS encoding (CP850); curly apostrophes, quote marks and dashes were all turned into '?' on export",About 808 restored automatically; a few dozen stray '?' remain. Saved a UTF-8 copy,Note
+212,Shrewsbury,End Date,Day and month swapped (month 22): was 1645/22/2,Changed to 1645/2/22,Fixed in data/sieges.csv
+100,Halton Castle,End Date,Year typed in the month position: was /1643/,Changed to 1643//,Fixed in data/sieges.csv
+115,Hornby Castle,End Date,Year and month typed one position late: was /1643/6,Changed to 1643/6/,Fixed in data/sieges.csv
+67,Conwy,End Date,Month typed in the day position: was 1646//11,Changed to 1646/11/,Fixed in data/sieges.csv
+39.2,Bristol,End Date,End year 1643 is before the 1645 start; duration says 20 days: was 1643/9/10,Changed to 1645/9/10,Fixed in data/sieges.csv
+191,Powderham Castle,Start Date,Start (Dec 1646) is after the end (25 Jan 1646); 42-day duration fits Dec 1645: was 1646/12/,Changed to 1645/12/,Fixed in data/sieges.csv
+139.1,Lichfield,Latitude/Longitude,"Has Leicester's coordinates (52.630611, -1.1371117), so it sat on top of Leicester's sieges","Changed to the other Lichfield rows' coordinates (52.6805763, -1.8614911)",Fixed in data/sieges.csv
+183.1,Pembroke,ID,ID 183.1 used for both Pembroke sieges,Second (1648) row given 183.2,Fixed in data/sieges.csv
+5,Alcester Church,Start/End Date,No dates at all,Shown under All years only,Note
+18,Berkeley Castle,Duration,Number without units (3),Read as days,Note
+22,Bickleigh Castle,Start/End Date,No dates at all,Shown under All years only,Note
+35,Bretby Hall,Start/End Date,No dates at all,Shown under All years only,Note
+40,Brodick Castle,Start/End Date,No dates at all,Shown under All years only,Note
+41,Broncroft Castle,End Date,Ends (1645/5/) before it starts (1645/6/),Left as is: please check,Needs checking
+57,Chepstow Castle,Duration,Duration says 64 days but the dates give 33 days,Kept the Duration column: please check,Needs checking
+144.2,Liverpool,Duration,Duration says 64 days but the dates give 74 days,Kept the Duration column: please check,Needs checking
+146,London,All,"No dates, sides or outcome (looks like an introduction entry, not a siege)",Left off the map,Fixed in data/sieges.csv
+251,Whorlton Castle,Start/End Date,No dates at all,Shown under All years only,Note
+257,Witton le Wear Castle,Start/End Date,No dates at all,Shown under All years only,Note
+,Scotland (several),MAP Attacker/Defender/Outcome,"Covenanter forces are labelled 'Scots' in 2 rows but 'Parliamentarians' in others (e.g. Castle Campbell, Mingary, Kincardine); English Parliament forces in 1650–54 are also 'Parliamentarians'",Left as is: worth deciding on one label,Note
+,"Dumbarton Castle, Dunnottar Castle, Kildrummy Castle",Dates,"Dates run past 1651 (Glencairn's rising, 1652–54)",Year filter extended to 1654,Note
+172.1,Newcastle upon Tyne,Start Date / MAP Attacker,"Dated 1640 (the Second Bishops' War, before the Civil War) and the attackers are labelled 'Parliamentarians', though the headline describes the Scots",Left as is: kept on the map under 1640,Note
+266,York,MAP Defender / Attacker / Outcome,Possible error (spot-check): Sides look reversed and the outcome wrong: York was held for the King and surrendered to Parliament and the Scots on 16 July 1644 (the row's own text says so),Left as is: please check,Needs checking
+118.1,Hull,MAP Outcome,"Possible error (spot-check): Outcome says Royalists, but the text says the King abandoned the siege of Hull",Left as is: please check,Needs checking
+181.3,Oxford,MAP Outcome,"Possible error (spot-check): Outcome says Royalists, but Oxford surrendered to Fairfax in June 1646 (row is also tagged Parliamentarian Best)",Left as is: please check,Needs checking
+178,Nunney Castle,MAP Outcome,"Possible error (spot-check): Outcome says Royalists, but the text says Colonel Prater surrendered Nunney Castle",Left as is: please check,Needs checking
+245,Warwick Castle,MAP Outcome,"Possible error (spot-check): Outcome says Royalists, but the text says the siege ended as Parliament's relief force approached",Left as is: please check,Needs checking
+138.1,Leicester,Start/End Date,"Possible error (spot-check): Dated May 1644; Rupert stormed Leicester on 30–31 May 1645, a fortnight before Naseby (the text mentions events of late 1644 as before the siege)",Left as is: please check,Needs checking
+24,Bideford,Latitude/Longitude,Marker is 3 km from the centre of Bideford; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+94,Grantham,Latitude/Longitude,Marker is 4 km from the centre of Grantham; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+107,Hereford,Latitude/Longitude,Marker is 5 km from the centre of Hereford; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+137,Leeds,Latitude/Longitude,Marker is 8 km from the centre of Leeds; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+141,Lincoln,Latitude/Longitude,Marker is 6 km from the centre of Lincoln; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+144.1,Liverpool,Latitude/Longitude,Marker is 4 km from the centre of Liverpool; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+144.2,Liverpool,Latitude/Longitude,Marker is 4 km from the centre of Liverpool; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+146,London,Latitude/Longitude,Marker is 20 km from the centre of London; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+150,Lowestoft,Latitude/Longitude,Marker is 4 km from the centre of Lowestoft; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+157,Manchester,Latitude/Longitude,Marker is 3 km from the centre of Manchester; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+186,Plymouth,Latitude/Longitude,Marker is 8 km from the centre of Plymouth; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+190,Portsmouth,Latitude/Longitude,Marker is 6 km from the centre of Portsmouth; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+195,Reading,Latitude/Longitude,Marker is 6 km from the centre of Reading; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+216,Stafford,Latitude/Longitude,Marker is 4 km from the centre of Stafford; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+227.1,Taunton,Latitude/Longitude,Marker is 20 km from the centre of Taunton; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+227.2,Taunton,Latitude/Longitude,Marker is 20 km from the centre of Taunton; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+227.3,Taunton,Latitude/Longitude,Marker is 20 km from the centre of Taunton; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+250,Wexford,Latitude/Longitude,Marker is 3 km from the centre of Wexford; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+252,Wigan,Latitude/Longitude,Marker is 6 km from the centre of Wigan; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+263,Worcester,Latitude/Longitude,Marker is 4 km from the centre of Worcester; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking
+266,York,Latitude/Longitude,Marker is 4 km from the centre of York; may be a mapping service's area centre rather than the siege site,Left as is,Needs checking

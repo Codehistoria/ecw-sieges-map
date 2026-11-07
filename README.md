@@ -33,6 +33,8 @@ js/vendor/              Leaflet and PapaParse (third-party libraries; leave alon
 4. On GitHub, open the `data` folder, choose **Add file › Upload files**, and drop in `sieges.csv` to replace the old one. Click **Commit changes**.
 5. Wait a minute, then refresh the map. Open `check.html` to see if anything needs fixing.
 
+`data/known-issues.csv` lists problems found by reading the data against the history (outcomes that contradict the write-up, dates in the wrong year, markers far from their town). The checker shows them; change a row's Status to `Resolved` once it's dealt with.
+
 ### The columns
 
 | Column | What goes in it |
@@ -58,7 +60,7 @@ A row with no dates, no sides and no outcome (like the "London" introduction row
 3. Several sieges can share a photo: just put the same file name in each row.
 4. Keep photos under about 1 MB. Around 1200 pixels wide is plenty.
 5. Put the photographer and licence in **Caption Image 1**. Creative Commons photos must be credited.
-6. Open `check.html` to see which named photos are still missing.
+6. Open `check.html`. It lists photos the spreadsheet names but the folder doesn't have, names that nearly match (`.JPG` vs `.jpg`, capitals, a stray space), and photos in the folder that no row uses, with a guess at which siege each is for.
 
 The photo appears at the top of the pop-up and in the small label when you hover over a siege.
 
