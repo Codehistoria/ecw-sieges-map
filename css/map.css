@@ -204,3 +204,26 @@ footer { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; border-to
   text-shadow: 0 0 2px var(--paper), 0 0 3px var(--paper), 0 0 4px var(--paper), 0 0 5px var(--paper); }
 .leaflet-container.no-siege-names .sg-name { display: none; }
 .sg.unknown .sg-name { color: var(--ink); }
+
+/* ---- Emphasis: sieges lead, towns recede ---- */
+/* Siege symbols: star forts with a parchment halo and a soft shadow */
+.sg.fort-marker { border: 0; border-radius: 0; background: none !important; opacity: 1; overflow: visible; }
+.sg.fort-marker svg.fort { display: block; overflow: visible; filter: drop-shadow(0 0 1.2px var(--paper)) drop-shadow(0 0 1.2px var(--paper)) drop-shadow(0 1px 1.5px rgba(40, 28, 10, .4)); }
+.sg.fort-marker .badge { right: -6px; top: -6px; }
+.sg.fort-marker .sg-name { margin-top: 1px; font-family: var(--f-sc); font-style: normal; font-size: 13px; letter-spacing: .03em; color: var(--ink); -webkit-text-stroke: .25px var(--ink);
+  text-shadow: 0 0 2px var(--paper), 0 0 3px var(--paper), 0 0 4px var(--paper), 0 0 6px var(--paper); }
+.size-key > div { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.size-key svg.fort { display: block; }
+.key-multi { position: relative; display: inline-block; }
+.key-multi b { right: -8px; top: -6px; }
+
+/* Towns and cities: lighter ink, smaller marks, drawn under the forts */
+.city { color: #6f604b; }
+.city.capital { color: var(--ink-soft); font-size: 15px; }
+.city.capital::before { width: 7px; height: 7px; left: -11px; margin-top: -4.5px; background: var(--ink-soft); border-color: var(--ink-soft); box-shadow: inset 0 0 0 1.5px var(--paper); }
+.city.major { color: #6f604b; font-size: 13px; }
+.city.major::before { width: 5px; height: 5px; left: -9px; margin-top: -3.5px; border-color: #6f604b; box-shadow: none; }
+.city.minor { color: #85745a; font-size: 11.5px; }
+.city.minor::before { width: 4px; height: 4px; left: -8px; margin-top: -3px; border-color: #85745a; box-shadow: none; }
+.city.town { color: #8f7f64; font-size: 11px; transform: translate(-50%, -50%); }
+.city.town::before { display: none; }

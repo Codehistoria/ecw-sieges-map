@@ -49,12 +49,47 @@
   const cart = $("cartouche");
   if (M.showTitleBox === false) cart.style.display = "none";
   else { cart.querySelector(".t").textContent = (M.titleBox || {}).title || ""; cart.querySelector(".s").textContent = (M.titleBox || {}).subtitle || ""; }
-  $("multiKey").style.background = `conic-gradient(${colour("s1")} 0 66.6%, ${colour("s0")} 0 100%)`;
-
   /* ---------- helpers ---------- */
   const sortKey = d => d.s || d.e || "9999";
   const scale = M.markerScale || 1;
   const radius = d => (d.d == null ? 5 : 3.5 + Math.sqrt(Math.max(d.d, 0.5)) * 0.55) * scale;
+
+  /* Siege symbol: a five-bastioned star fort, the 17th-century shape of a fortified place.
+     Coloured by who prevailed; several sieges at one place split it into slices. */
+  const FORT = (() => {
+    const pt = (deg, r) => { const a = deg * Math.PI / 180; return `${(Math.cos(a) * r).toFixed(3)},${(Math.sin(a) * r).toFixed(3)}`; };
+    const p = [];
+    for (let i = 0; i < 5; i++) { const a = -90 + i * 72; p.push(pt(a - 25, .5), pt(a - 15, .7), pt(a, 1), pt(a + 15, .7), pt(a + 25, .5)); }
+    return "M" + p.join("L") + "Z";
+  })();
+  let fortId = 0;
+  function fortSVG(fills, px, unknown) {
+    const id = "fc" + (++fortId);
+    const n = fills.length, step = 360 / n;
+    const slice = (j) => {
+      if (n === 1) return `<rect x="-1.2" y="-1.2" width="2.4" height="2.4" fill="${fills[0]}"/>`;
+      const a0 = (-90 + j * step) * Math.PI / 180, a1 = (-90 + (j + 1) * step) * Math.PI / 180;
+      return `<path d="M0,0L${(Math.cos(a0) * 1.3).toFixed(3)},${(Math.sin(a0) * 1.3).toFixed(3)}A1.3,1.3 0 ${step > 180 ? 1 : 0} 1 ${(Math.cos(a1) * 1.3).toFixed(3)},${(Math.sin(a1) * 1.3).toFixed(3)}Z" fill="${fills[j]}"/>`;
+    };
+    const body = unknown
+      ? `<path d="${FORT}" fill="var(--paper)" stroke="${fills[0]}" stroke-width="1.6" stroke-dasharray="2.2 1.6" vector-effect="non-scaling-stroke"/>`
+      : `<clipPath id="${id}"><path d="${FORT}"/></clipPath><g clip-path="url(#${id})">${fills.map((_, j) => slice(j)).join("")}</g>
+         <path d="${FORT}" fill="none" stroke="var(--ink)" stroke-width="1.3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+    return `<svg class="fort" width="${px}" height="${px}" viewBox="-1.15 -1.15 2.3 2.3" aria-hidden="true">${body}</svg>`;
+  }
+  const fortPx = r => Math.max(14, Math.round(r * 2.5));
+
+  // the key in the side panel, drawn with the same symbols
+  (() => {
+    const c0 = colour("s0"), c1 = colour("s1");
+    const item = (svg, label) => `<div>${svg}<span>${label}</span></div>`;
+    $("sizeKey").innerHTML =
+      item(fortSVG([c0], fortPx(radius({ d: 1 }))), "1 day") +
+      item(fortSVG([c0], fortPx(radius({ d: 182 }))), "6 months") +
+      item(fortSVG([c0], fortPx(radius({ d: 730 }))), "2 years") +
+      item(fortSVG([c0], fortPx(5 * scale), true), "length unknown") +
+      item(`<span class="key-multi">${fortSVG([c1, c1, c0], 26)}<b>3</b></span>`, "several sieges");
+  })();
   function fmtDays(d) {
     if (d.d == null) return d.dl || "length unknown";
     const n = d.d, ap = d.approx ? "c. " : "";
@@ -141,7 +176,7 @@
   if (M.showCities !== false && cfg.data.cities) {
     try {
       const { text } = await fetchText(cfg.data.cities, "auto");
-      map.createPane("cities"); map.getPane("cities").style.zIndex = 620; map.getPane("cities").style.pointerEvents = "none";
+      map.createPane("cities"); map.getPane("cities").style.zIndex = 590; map.getPane("cities").style.pointerEvents = "none"; // under the siege symbols
       parseCSV(text).data.forEach(c => {
         const lat = parseFloat(c.Latitude), lng = parseFloat(c.Longitude);
         if (!c.Name || !isFinite(lat) || !isFinite(lng)) return;
@@ -159,8 +194,31 @@
     el.classList.toggle("far", z < (M.smallTownsFromZoom ?? 6.75));
     el.classList.toggle("no-towns", z < (M.townsFromZoom ?? 7.5));
     el.classList.toggle("no-siege-names", z < (M.siegeNamesFromZoom ?? 8));
+    scheduleDeclutter();
   };
-  map.on("zoomend", zoomClasses); zoomClasses();
+  // Where siege names would overlap, the longer siege keeps its name and the other is hidden until you zoom closer.
+  let declutterQueued = false;
+  function scheduleDeclutter() {
+    if (declutterQueued) return;
+    declutterQueued = true;
+    requestAnimationFrame(() => { declutterQueued = false; declutter(); });
+  }
+  function declutter() {
+    const box = map.getContainer();
+    if (box.classList.contains("no-siege-names")) return;
+    const els = [...box.querySelectorAll(".sg-name")];
+    els.forEach(el => { el.style.visibility = ""; });
+    const items = els.map(el => ({ el, size: el.parentElement.offsetWidth, r: el.getBoundingClientRect() }))
+      .filter(x => x.r.width)
+      .sort((a, b) => b.size - a.size);
+    const placed = [];
+    const hits = (a, b) => a.left < b.right + 3 && a.right + 3 > b.left && a.top < b.bottom + 1 && a.bottom + 1 > b.top;
+    items.forEach(x => {
+      if (placed.some(p => hits(x.r, p))) x.el.style.visibility = "hidden";
+      else placed.push(x.r);
+    });
+  }
+  map.on("zoomend", zoomClasses); map.on("moveend", scheduleDeclutter); zoomClasses();
   map.on("popupopen", () => document.querySelector(".plate").classList.add("popup-open"));
   map.on("popupclose", () => document.querySelector(".plate").classList.remove("popup-open"));
 
@@ -178,16 +236,12 @@
   function iconFor(members) {
     const known = members.filter(m => m.d != null);
     const r = known.length ? Math.max(...known.map(radius)) : 5 * scale;
-    const size = Math.round(r * 2), multi = members.length > 1, c = colour(members[0].w);
-    let bg = c;
-    if (multi) {
-      const step = 100 / members.length;
-      bg = "conic-gradient(" + members.map((m, j) => `${colour(m.w)} ${(j * step).toFixed(2)}% ${((j + 1) * step).toFixed(2)}%`).join(", ") + ")";
-    }
-    const cls = "sg" + (multi ? " multi" : "") + (!known.length ? " unknown" : "");
+    const size = fortPx(r), multi = members.length > 1;
+    const unknown = !known.length && !multi;
+    const svg = fortSVG(members.map(m => colour(m.w)), size, unknown);
     const name = siegeName(members);
-    return { r, icon: L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -size / 2],
-      html: `<div class="${cls}" style="--c:${c};width:${size}px;height:${size}px;background:${bg}">${multi ? `<span class="badge">${members.length}</span>` : ""}${name ? `<span class="sg-name">${esc(name)}</span>` : ""}</div>` }) };
+    return { r: size / 2, icon: L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -size / 2 + 2],
+      html: `<div class="sg fort-marker${multi ? " multi" : ""}" style="width:${size}px;height:${size}px">${svg}${multi ? `<span class="badge">${members.length}</span>` : ""}${name ? `<span class="sg-name">${esc(name)}</span>` : ""}</div>` }) };
   }
 
   // The name shown under a siege marker once zoomed in. Left out when a town label with the same name sits within 8 km.
@@ -325,6 +379,7 @@
   function render(fit) {
     const vis = visible();
     updateMarkers(new Set(vis));
+    scheduleDeclutter();
     if (fit && vis.length) map.flyToBounds(L.latLngBounds(vis.map(d => [d.lat, d.lng])).pad(0.15), { maxZoom: 8, duration: reduceMotion ? 0 : 0.8 });
 
     const longest = vis.filter(d => d.d != null).reduce((a, d) => (!a || d.d > a.d ? d : a), null);
