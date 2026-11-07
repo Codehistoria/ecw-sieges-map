@@ -8,9 +8,9 @@
   --rule: #b9a47c;
   --sea: #cdd0bd;
   --sea-line: #aeb39c;
-  --parl: #c0701a;   /* orange-tawny: Parliament's field sash */
-  --roy: #9a1c2c;    /* crimson: the King's field sash */
-  --scot: #2b5c8a;   /* saltire blue */
+  --parl: #24508f;   /* Parliament: blue */
+  --roy: #b0202e;    /* Royalists: red */
+  --scot: #e0ad1f;   /* Scots: yellow */
   --focus: #1f4e79;
   --card: var(--paper);        /* pop-ups and hover labels: same parchment as the map */
   --card-soft: var(--paper-deep);
