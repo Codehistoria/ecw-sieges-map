@@ -302,10 +302,10 @@ footer { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; border-to
 
 .tour { position: absolute; z-index: 1001; left: 50%; transform: translateX(-50%); bottom: 26px; width: min(520px, calc(100% - 52px));
   background: var(--paper); border: 1px solid var(--ink); outline: 1px solid var(--ink); outline-offset: 3px; box-shadow: 0 4px 16px rgba(40, 28, 10, .35); padding: 10px 14px 10px; }
-.tour-top { display: flex; align-items: center; gap: 10px; font-family: var(--f-ui); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
+.tour-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-family: var(--f-ui); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
 .tour-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tour-step { font-variant-numeric: tabular-nums; letter-spacing: .04em; white-space: nowrap; }
-.tour-x { flex: none; width: 26px; height: 26px; margin: -3px -6px -3px 0; border: 1px solid var(--ink); background: var(--paper); cursor: pointer; font-size: 17px; line-height: 22px; padding: 0; }
+.tour-x { flex: none; width: 26px; height: 26px; margin: -2px -4px 0 0; border: 1px solid var(--ink); background: var(--paper); cursor: pointer; font-size: 17px; line-height: 22px; padding: 0; }
 .tour-leg { margin: 4px 0 6px; padding: 5px 9px; font-family: var(--f-ui); font-size: 13px; line-height: 1.35; color: #7a1622; background: color-mix(in srgb, #9a1c2c 8%, var(--paper)); border-left: 3px solid #9a1c2c; }
 .tour-place { font-family: var(--f-display); font-size: 21px; line-height: 1.15; }
 .tour-when { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 3px; font-family: var(--f-ui); font-size: 12.5px; font-variant-numeric: tabular-nums; }
