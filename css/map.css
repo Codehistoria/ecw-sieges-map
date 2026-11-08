@@ -369,7 +369,3 @@ path.leg-now { animation: leg-march 1.2s linear infinite; }
 .start-wrap .start-here { margin-top: 0; }
 .start-min { flex: none; width: 28px; height: 28px; border: 1px solid var(--rule); border-radius: 50%; background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 0 2px; }
 .start-min:hover { border-color: var(--ink); color: var(--ink); }
-.leaflet-bar.map-tour { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--paper); color: var(--ink); font-family: var(--f-ui); font-size: 12.5px; cursor: pointer; white-space: nowrap; }
-.leaflet-bar.map-tour span { color: var(--roy); font-size: 10px; }
-.leaflet-bar.map-tour:hover { background: var(--paper-deep); }
-.plate.touring .map-tour { display: none; }

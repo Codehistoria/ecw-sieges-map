@@ -13,8 +13,7 @@ Colours are written as hex codes like `"#9a1c2c"`. Any colour picker gives you o
 | `intro` | The paragraph under the heading. |
 | `footer` | The note at the bottom of the side panel (source, date conventions). |
 | `searchPlaceholder` | Grey text in the search box. |
-| `startHereButton`, `startHereNote` | The wording of the red "Start here" button under the introduction, which opens the overview story and starts its tour. |
-| `startHereShort` | The wording of the small button on the map that replaces it once a visitor has tucked it away with the – button (remembered in their browser, and done automatically after they've taken the tour once). |
+| `startHereButton`, `startHereNote` | The wording of the red "Start here" button under the introduction, which opens the overview story and starts its tour. Visitors can hide it with ×, and it stays hidden on later visits once they've taken the tour (remembered in their browser); the tour is always available as the first tab under Stories. |
 | `storiesIntro` | The short explanation under the Stories heading, saying what choosing a story does. |
 
 ## `github`
