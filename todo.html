@@ -212,6 +212,9 @@
     if (repo) {
       try { const res = await fetch(`https://api.github.com/repos/${repo}/contents/${folder.replace(/\/$/, "")}?ref=${encodeURIComponent(branch)}`); if (res.ok) files = new Set((await res.json()).filter(i => i.type === "file").map(i => i.name)); } catch (e) { /* fall back */ }
     }
+    if (!files) {   // a list of the photos, if one is published with the page (images/manifest.json)
+      try { const res = await fetch(folder + "manifest.json", { cache: "no-cache" }); if (res.ok) files = new Set(await res.json()); } catch (e) { /* fall back */ }
+    }
     const fileExists = async f => {
       if (files) return files.has(f);
       try { return (await fetch(folder + f.split("/").map(encodeURIComponent).join("/"), { method: "HEAD", cache: "no-cache" })).ok; } catch (e) { return false; }
