@@ -169,30 +169,28 @@
 
   const optionalJSON = async url => { if (!url) return null; try { return JSON.parse((await fetchText(url, "utf-8")).text); } catch (e) { console.warn(e); return null; } };
   const [coast, rivers] = await Promise.all([optionalJSON(cfg.data.coastline), M.showRivers === false ? null : optionalJSON(cfg.data.rivers)]);
-  /* The land is drawn by its own renderer. Leaflet normally draws vectors only for the area on screen and
-     redraws when a move ends, so a fly-to that zooms out uncovers undrawn sea. Here the drawn area is made big
-     enough to hold the whole of the land at the current zoom (up to a size limit), so moves only reveal land
-     already drawn; nothing is redrawn mid-flight, which keeps the picture steady. */
+  /* The land is drawn by its own renderer, which keeps a wide margin drawn beyond the edges of the view
+     (padding 1 = one screen-width on every side), so panning doesn't uncover undrawn sea. Leaflet normally
+     only redraws vectors when a move ends, stretching the old drawing during a fly-to; the land is light
+     (about 40 KB), so it is redrawn every few frames while the map flies, keeping it sharp and complete. */
   const landR = L.svg({ padding: 1 });
   const base = { interactive: false, renderer: landR, smoothFactor: 1.5 };
-  let landBounds = null;
-  const MAX_DRAWN_PX = innerWidth < 820 ? 5000 : 9000;   // the largest drawing kept, in pixels across (smaller on phones); zoomed far in, the plain margin applies
-  // set before any layer is added: Leaflet binds the renderer's update to map moves when it is first added
-  landR._update = function () {
-    if (landBounds && this._map) {
-      const size = this._map.getSize(), nw = this._map.latLngToContainerPoint(landBounds.getNorthWest()), se = this._map.latLngToContainerPoint(landBounds.getSouthEast());
-      const need = Math.max(-nw.x / size.x, (se.x - size.x) / size.x, -nw.y / size.y, (se.y - size.y) / size.y, 0) + 0.15;
-      const cap = Math.max(1, (MAX_DRAWN_PX / Math.max(size.x, size.y) - 1) / 2);
-      this.options.padding = Math.min(Math.max(need, 1), cap);
-    }
-    return L.SVG.prototype._update.call(this);
-  };
   if (coast) {
     L.geoJSON(coast, { ...base, style: { color: "#b9b896", weight: 7, opacity: .7, fill: false } }).addTo(map);
-    landBounds = L.geoJSON(coast, { ...base, style: { color: col.ink || "#2a2017", weight: 1.1, fillColor: col.land || "#efe5ca", fillOpacity: 1 } }).addTo(map).getBounds();
+    L.geoJSON(coast, { ...base, style: { color: col.ink || "#2a2017", weight: 1.1, fillColor: col.land || "#efe5ca", fillOpacity: 1 } }).addTo(map);
   }
   if (rivers) L.geoJSON(rivers, { ...base, style: { color: col.rivers || "#7c8b88", weight: 1.4, opacity: .8 } }).addTo(map);
-  if (landBounds) landR._reset();
+  let landT = 0, landRaf = 0;
+  const redrawLand = () => {
+    landRaf = 0;
+    if (!landR._map || map._animatingZoom) return;      // a wheel or pinch zoom animates by itself; leave it be
+    landR._update(); landR._onZoomEnd(); landR._updatePaths();
+    landT = performance.now();
+  };
+  map.on("zoom move", () => {
+    if (landRaf || performance.now() - landT < 80) return;
+    landRaf = requestAnimationFrame(redrawLand);
+  });
 
   (M.labels || []).forEach(l => L.marker([l.lat, l.lng], { interactive: false, keyboard: false,
     icon: L.divIcon({ className: "", html: `<div class="lbl ${l.style === "sea" ? "sea" : "realm"}">${esc(l.text)}</div>`, iconSize: [0, 0] }) }).addTo(map));
