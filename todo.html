@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Siege Map To-Do</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+  :root { color-scheme: light; --paper: #efe5ca; --paper-deep: #e3d4ad; --card: #f6efdb; --ink: #2a2017; --soft: #5e4d37; --rule: #b9a47c; --bad: #9a1c2c; --ok: #3a6f3a; --warn: #a2620f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Alegreya Sans", system-ui, sans-serif; font-size: 15px; line-height: 1.45; }
+  main { max-width: 1000px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px)); }
+  h1 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 34px; margin: 0 0 4px; }
+  h2 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 24px; margin: 0; }
+  h3 { font-size: 15px; margin: 14px 0 4px; }
+  .lede { color: var(--soft); max-width: 74ch; margin: 0 0 12px; }
+  a { color: var(--bad); }
+  code { font-size: 13px; background: #fff8e6; padding: 0 4px; border-radius: 2px; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; font-size: 14px; }
+
+  .progress { position: sticky; top: 0; z-index: 5; background: var(--paper); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 10px 0; margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  .bar { flex: 1 1 220px; height: 10px; background: var(--paper-deep); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; min-width: 0; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+  .progress b { font-variant-numeric: tabular-nums; }
+  .progress label { font-size: 14px; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  button.small { font: inherit; font-size: 13px; padding: 3px 10px; border: 1px solid var(--ink); background: transparent; border-radius: 3px; cursor: pointer; }
+  button.small:hover { background: var(--paper-deep); }
+
+  section.block { margin-top: 30px; }
+  .block-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; border-bottom: 1px solid var(--ink); padding-bottom: 4px; }
+  .block-head .pri { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--bad); font-weight: 700; }
+  .block-head .count { margin-left: auto; font-size: 13px; color: var(--soft); font-variant-numeric: tabular-nums; }
+  .why { color: var(--soft); max-width: 76ch; margin: 8px 0 0; }
+  details.how { margin: 10px 0 8px; background: var(--card); border: 1px dashed var(--rule); padding: 8px 14px; max-width: 80ch; }
+  details.how summary { cursor: pointer; font-weight: 700; }
+  details.how ol, details.how ul { margin: 6px 0; padding-left: 20px; }
+  details.how li { margin: 3px 0; }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+
+  ul.tasks { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--rule); background: var(--card); }
+  ul.tasks li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 4px 8px; padding: 9px 12px; border-bottom: 1px solid #e0d2ad; }
+  ul.tasks li:last-child { border-bottom: 0; }
+  ul.tasks input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--ok); cursor: pointer; }
+  .t-title { font-weight: 700; }
+  .t-title .id { font-weight: 400; color: var(--soft); font-variant-numeric: tabular-nums; }
+  .t-body { grid-column: 2; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+  .t-now { grid-column: 2; font-size: 13px; color: var(--soft); }
+  .t-links { grid-column: 2; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  li.done .t-title, li.done .t-body { text-decoration: line-through; color: var(--soft); }
+  li.done { background: #eef0dc; }
+  body.hide-done li.done { display: none; }
+  .empty { padding: 12px; color: var(--soft); font-style: italic; }
+
+  .builder { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin: 8px 0; }
+  .builder label { display: flex; flex-direction: column; font-size: 13px; color: var(--soft); gap: 2px; }
+  .builder input, .builder select { font: inherit; padding: 4px 6px; border: 1px solid var(--rule); background: #fffaf0; min-width: 0; }
+  .out { background: #fff8e6; border: 1px solid var(--rule); padding: 6px 10px; font-size: 14px; min-height: 2.2em; overflow-wrap: anywhere; }
+  .note { font-size: 13px; color: var(--soft); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Siege map to-do list</h1>
+  <p class="lede">Everything that still needs doing to the map's data, most important first. The list is built from the spreadsheet, the photo folder and the review notes each time this page opens, so once something is fixed in the data it drops off by itself. Tick items as you go: ticks are kept in this browser only, so the lasting record is the data itself (and, for reviewed issues, setting the Status to <b>Resolved</b> in <code>data/known-issues.csv</code>).</p>
+  <nav><a href="index.html">The map</a><a href="check.html">The data checker</a><a href="#guides">Guides and tools</a><span id="ghLinks"></span></nav>
+
+  <div class="progress" aria-live="polite">
+    <span id="progTxt">Loading…</span>
+    <span class="bar" aria-hidden="true"><i id="progBar"></i></span>
+    <label><input type="checkbox" id="hideDone"> Hide ticked</label>
+    <button type="button" class="small" id="copyList">Copy the list as text</button>
+  </div>
+
+  <div id="blocks"></div>
+
+  <section class="block" id="guides">
+    <div class="block-head"><h2>Guides and tools</h2></div>
+
+    <details class="how" open>
+      <summary>Editing the spreadsheet</summary>
+      <ol>
+        <li>Download <code>data/sieges.csv</code> from GitHub (open the file, then the download button) and open it in Excel.</li>
+        <li>Make the changes. Find a row quickly with Ctrl-F and its ID.</li>
+        <li>Save with <b>File › Save As › "CSV UTF-8 (Comma delimited)"</b>. Plain "CSV" turns apostrophes into <code>?</code>.</li>
+        <li>On GitHub, open the <code>data</code> folder, choose <b>Add file › Upload files</b>, drop in <code>sieges.csv</code> and click <b>Commit changes</b>.</li>
+        <li>Wait a minute, then refresh this page: fixed items disappear.</li>
+      </ol>
+      <p class="note">Small changes (one cell) can also be made directly on GitHub: open the file and click the pencil icon. Keep the commas and quote marks exactly as they are.</p>
+    </details>
+
+    <details class="how">
+      <summary>Correcting who attacked, who defended and who prevailed</summary>
+      <ul>
+        <li>The three columns are <b>MAP Attacker</b>, <b>MAP Defender</b> and <b>MAP Outcome</b>. Each takes exactly <code>Parliamentarians</code>, <code>Royalists</code> or <code>Scots</code>.</li>
+        <li><b>MAP Outcome</b> is the side that came out on top: the attackers if the place fell, the defenders if it held or was relieved.</li>
+        <li>The circle's colour on the map, the "prevailed" label and the tour ring all come from these columns, so one fix corrects all three.</li>
+      </ul>
+    </details>
+
+    <details class="how">
+      <summary>Photo credits: what a caption needs</summary>
+      <ul>
+        <li>Every photo needs a credit in <b>Caption Image 1</b> (or <b>Caption Image 2</b> for the second photo). Creative Commons licences require one.</li>
+        <li>Find the photographer and licence where the photo came from: the Geograph, Wikimedia Commons or Flickr page shows both.</li>
+        <li>Follow the form already used in the spreadsheet. The builder below writes it for you.</li>
+      </ul>
+      <div class="builder">
+        <label>Title of the photo<input id="cbTitle" placeholder="The Church of St. Nicholas"></label>
+        <label>Photographer<input id="cbBy" placeholder="Spencer Means"></label>
+        <label>Where it's from<select id="cbFrom"><option>Flickr</option><option>Wikimedia Commons</option><option>Geograph</option><option value="">(own photo)</option></select></label>
+        <label>Licence<select id="cbLic"><option>CC BY 2.0</option><option>CC BY-SA 2.0</option><option>CC BY 3.0</option><option>CC BY-SA 3.0</option><option>CC BY 4.0</option><option>CC BY-SA 4.0</option><option>public domain</option><option value="">(none: own photo)</option></select></label>
+      </div>
+      <div class="out" id="cbOut" aria-live="polite"></div>
+      <div class="tools"><button type="button" class="small" id="cbCopy">Copy caption</button></div>
+    </details>
+
+    <details class="how">
+      <summary>Adding or renaming photos</summary>
+      <ul>
+        <li>The file name in the photos folder must match the spreadsheet's <b>Image 1</b> or <b>Image 2</b> exactly, including capitals and the ending (<code>.jpg</code>, <code>.JPG</code>…).</li>
+        <li>To upload: on GitHub open the <code>images</code> folder, <b>Add file › Upload files</b>, then <b>Commit changes</b>.</li>
+        <li>Keep photos under 1 MB: about 1,200 pixels wide is plenty.</li>
+        <li>If a name is nearly right, the <a href="check.html#s-photos-near">checker's near-miss list</a> says what differs.</li>
+        <li>A row can name a second photo in <b>Image 2</b>; the map uses it whenever Image 1's file is missing.</li>
+      </ul>
+    </details>
+
+    <details class="how">
+      <summary>Marking a reviewed issue as dealt with</summary>
+      <ul>
+        <li>Open <code>data/known-issues.csv</code> on GitHub and click the pencil icon.</li>
+        <li>Change that row's last column (Status) from <code>Needs checking</code> to <code>Resolved</code>, or to <code>Fixed in data/sieges.csv</code> if you changed the spreadsheet. Note what you decided in "What was done".</li>
+        <li>If the data was right after all, set it to <code>Resolved</code> and say so: the item still drops off this list.</li>
+      </ul>
+    </details>
+
+    <details class="how">
+      <summary>Checking a story's tags and tour notes</summary>
+      <ul>
+        <li>Open the story on the map (the links below do this) and choose <b>Follow the story</b>. Each stop shows the line from <code>data/story-steps.csv</code> saying why it's there.</li>
+        <li>To remove a siege from a story, delete the tag from that row's <b>Tags</b> column in the spreadsheet. To add one, add the tag (separate tags with a semicolon) and a line for it in <code>data/story-steps.csv</code>.</li>
+        <li>To reword a stop, edit its Note in <code>data/story-steps.csv</code>. To reword the story itself, edit its row in <code>data/stories.csv</code>.</li>
+      </ul>
+    </details>
+  </section>
+</main>
+
+<script src="js/vendor/papaparse.min.js"></script>
+<script src="js/data.js?v=20261108-4"></script>
+<script>
+(async function () {
+  "use strict";
+  const { loadConfig, loadStories, loadSteps, fetchText, parseCSV, buildRecords } = window.SiegeData;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const slug = v => v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  // ticks live in this browser only
+  const STORE = "siege-todo-ticks";
+  let ticks = {};
+  try { ticks = JSON.parse(localStorage.getItem(STORE) || "{}") || {}; } catch (e) { ticks = {}; }
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(ticks)); } catch (e) { /* private window: ticks last until the page closes */ } };
+
+  /* ---------- caption builder ---------- */
+  function caption() {
+    const t = $("cbTitle").value.trim(), by = $("cbBy").value.trim(), from = $("cbFrom").value, lic = $("cbLic").value;
+    if (!t && !by) return "";
+    let s = (t ? `“${t}”` : "Photo") + (by ? ` by ${by}` : "");
+    if (from) s += ` is taken from ${from}`;
+    if (lic) s += `${from ? " and" : " is"} ${lic === "public domain" ? "in the public domain" : "licensed under " + lic}`;
+    return s + ".";
+  }
+  ["cbTitle", "cbBy", "cbFrom", "cbLic"].forEach(id => $(id).addEventListener("input", () => { $("cbOut").textContent = caption(); }));
+  $("cbCopy").onclick = async () => { const c = caption(); if (!c) return; try { await navigator.clipboard.writeText(c); $("cbCopy").textContent = "Copied"; setTimeout(() => $("cbCopy").textContent = "Copy caption", 1500); } catch (e) { const r = document.createRange(); r.selectNodeContents($("cbOut")); getSelection().removeAllRanges(); getSelection().addRange(r); } };
+
+  try {
+    const cfg = await loadConfig();
+    try { cfg.stories = (await loadStories(cfg)).stories; } catch (e) { cfg.data.stories = null; cfg.stories = (await loadStories(cfg)).stories; }
+    const steps = await loadSteps(cfg).catch(() => new Map());
+    const { text } = await fetchText(cfg.data.sieges, cfg.data.encoding);
+    const parsed = parseCSV(text);
+    const { records, problems } = buildRecords(parsed.data, cfg);
+    const byId = new Map(records.map(d => [d.id, d]));
+    const gh = cfg.github || {}, repo = gh.repo, branch = gh.branch || "main";
+    const ghFile = (path, how) => repo ? `https://github.com/${repo}/${how || "blob"}/${branch}/${path}` : path;
+    if (repo) $("ghLinks").innerHTML = `<a href="https://github.com/${esc(repo)}" target="_blank" rel="noopener">The project on GitHub ↗</a>`;
+    const SIDE = Object.fromEntries((cfg.sides || []).map((s, i) => ["s" + i, s.value]));
+    const now = d => d ? `Now: ${esc(d.p)}, ${d.s || d.e || "undated"}${d.e && d.s && d.e !== d.s ? " to " + d.e : ""} · attacker <b>${esc(SIDE[d.a] || "–")}</b>, defender <b>${esc(SIDE[d.f] || "–")}</b>, prevailed <b>${esc(SIDE[d.w] || "–")}</b>` : "";
+
+    /* ---------- reviewed issues ---------- */
+    let review = [];
+    try { review = parseCSV((await fetchText("data/known-issues.csv", "auto")).text).data.filter(r => /needs/i.test(r.Status || "")); } catch (e) { /* optional */ }
+    const onMap = r => /outcome|attacker|defender|date/i.test(r.Column || "") && r.ID && !/whole file/i.test(r.Place || "");
+    const issueTask = r => {
+      const ids = String(r.ID || "").split(/[\/,]/).map(s => s.trim()).filter(Boolean);
+      return {
+        key: "issue:" + r.ID + "|" + r.Column + "|" + (r.Issue || "").slice(0, 40),
+        title: `${esc(r.Place || "Whole file")} <span class="id">${r.ID ? "· ID " + esc(r.ID) : ""} · ${esc(r.Column)}</span>`,
+        body: esc(r.Issue) + (r["What was done"] ? ` <span class="note">(${esc(r["What was done"])})</span>` : ""),
+        now: ids.map(i => now(byId.get(i))).filter(Boolean).join("<br>"),
+        links: ids.filter(i => byId.has(i)).map(i => `<a href="index.html?siege=${encodeURIComponent(i)}">See it on the map</a>`).join("")
+      };
+    };
+
+    /* ---------- photos ---------- */
+    const folder = (cfg.images || {}).folder || "images/";
+    let files = null;
+    if (repo) {
+      try { const res = await fetch(`https://api.github.com/repos/${repo}/contents/${folder.replace(/\/$/, "")}?ref=${encodeURIComponent(branch)}`); if (res.ok) files = new Set((await res.json()).filter(i => i.type === "file").map(i => i.name)); } catch (e) { /* fall back */ }
+    }
+    const fileExists = async f => {
+      if (files) return files.has(f);
+      try { return (await fetch(folder + f.split("/").map(encodeURIComponent).join("/"), { method: "HEAD", cache: "no-cache" })).ok; } catch (e) { return false; }
+    };
+    const refs = [];
+    records.forEach(d => d.images.forEach((im, i) => refs.push({ d, i, file: im.file, caption: im.caption })));
+    const exists = new Map(await Promise.all([...new Set(refs.map(r => r.file))].map(async f => [f, await fileExists(f)])));
+    // which photo the map actually shows for each siege: the first one whose file exists
+    const shown = new Map();
+    records.forEach(d => { const im = d.images.find(im => exists.get(im.file)); if (im) shown.set(d, im); });
+    const credits = [...shown].filter(([, im]) => !im.caption).map(([d, im]) => ({ d, im }));
+    const missingByFile = new Map();
+    refs.filter(r => !exists.get(r.file)).forEach(r => { if (!missingByFile.has(r.file)) missingByFile.set(r.file, []); missingByFile.get(r.file).push(r); });
+
+    /* ---------- stories ---------- */
+    const inStory = (d, v) => d.t === v || (d.tags || []).includes(v);
+
+    /* ---------- the blocks, most important first ---------- */
+    const blocks = [
+      {
+        id: "map", pri: "First", title: "Wrong on the map now",
+        why: "These change what visitors see: the wrong side shown as winning, attacker and defender swapped, or a date in the wrong year. Each was found by reading the write-up against the row.",
+        how: "Correcting who attacked, who defended and who prevailed",
+        tasks: review.filter(onMap).map(issueTask)
+      },
+      {
+        id: "credits", pri: "First", title: "Photo credits missing",
+        why: "These photos appear on the map with no credit. Creative Commons photos must name the photographer and licence, so this is a licensing matter as well as a courtesy.",
+        how: "Photo credits: what a caption needs",
+        download: { label: "Download this list as a spreadsheet (CSV)", name: "photo-credits-to-add.csv",
+          rows: () => [["ID", "Place", "Column", "Photo file", "Caption (fill in)"], ...credits.map(({ d, im }) => [d.id, d.p, d.images.indexOf(im) ? cfg.columns.caption2 : cfg.columns.caption, im.file, ""])] },
+        tasks: credits.map(({ d, im }) => ({
+          key: "credit:" + d.id + "|" + im.file,
+          title: `${esc(d.p)} <span class="id">· ID ${esc(d.id)}</span>`,
+          body: `Add a credit for <code>${esc(im.file)}</code> in <b>${esc(d.images.indexOf(im) ? cfg.columns.caption2 : cfg.columns.caption)}</b>.`,
+          links: `<a href="${esc(folder + im.file)}" target="_blank" rel="noopener">View the photo ↗</a><a href="index.html?siege=${encodeURIComponent(d.id)}">See it on the map</a>`
+        }))
+      },
+      {
+        id: "photos", pri: "Next", title: "Photo files not in the folder",
+        why: "The spreadsheet names these files but they aren't in the photos folder. Rows with a second photo show that instead; the rest show no photo. Grouped by file, so uploading one portrait fixes every row that uses it.",
+        how: "Adding or renaming photos",
+        download: { label: "Download this list as a spreadsheet (CSV)", name: "photos-to-upload.csv",
+          rows: () => [["Photo file", "Rows using it", "IDs", "Places"], ...[...missingByFile].map(([f, rs]) => [f, rs.length, rs.map(r => r.d.id).join("; "), [...new Set(rs.map(r => r.d.p))].join("; ")])] },
+        tasks: [...missingByFile].sort((a, b) => b[1].length - a[1].length).map(([f, rs]) => ({
+          key: "photo:" + f,
+          title: `<code>${esc(f)}</code> <span class="id">· used by ${rs.length} row${rs.length === 1 ? "" : "s"}</span>`,
+          body: `Upload it, or correct the name in the spreadsheet. ${rs.length <= 6 ? "Rows: " + rs.map(r => esc(r.d.p) + " (" + esc(r.d.id) + ")").join(", ") : "Rows include " + rs.slice(0, 5).map(r => esc(r.d.p)).join(", ") + " and " + (rs.length - 5) + " more"}.`,
+          now: rs.every(r => shown.has(r.d)) ? "Every row using it already shows another photo meanwhile." : `${rs.filter(r => !shown.has(r.d)).length} of these rows show no photo at the moment.`
+        }))
+      },
+      {
+        id: "review", pri: "Next", title: "Other points found in review",
+        why: "Write-ups that contradict their row, markers placed away from the site, lengths that don't match the dates. Less visible than the first list, but worth settling.",
+        how: "Marking a reviewed issue as dealt with",
+        tasks: review.filter(r => !onMap(r)).map(issueTask)
+      },
+      {
+        id: "sheet", pri: "Next", title: "Problems the checker finds automatically",
+        why: "Things the map can read but that look wrong: unreadable dates, missing IDs, durations that don't match the dates.",
+        how: "Editing the spreadsheet",
+        tasks: problems.map(p => ({
+          key: "sheet:" + p.id + "|" + p.field + "|" + p.message,
+          title: `${esc(p.place || "Row " + p.row)} <span class="id">· ${p.id ? "ID " + esc(p.id) + " · " : ""}row ${esc(p.row)} · ${esc(p.field)}</span>`,
+          body: esc(p.message)
+        }))
+      },
+      {
+        id: "stories", pri: "Then", title: "Read through each story",
+        why: "The stories were tagged by reading every write-up, and each tour stop has a line saying why it's there. Both are judgements: follow each story once and check that every stop belongs and its line is right.",
+        how: "Checking a story's tags and tour notes",
+        tasks: cfg.stories.map(st => {
+          const n = records.filter(d => inStory(d, st.value)).length;
+          const noted = records.filter(d => inStory(d, st.value) && steps.has(st.value + "|" + d.id)).length;
+          return {
+            key: "story:" + st.value,
+            title: `${esc(st.label)} <span class="id">· ${esc(st.group || "")} · ${n} siege${n === 1 ? "" : "s"}</span>`,
+            body: esc(st.summary || ""),
+            now: noted < n ? `${n - noted} stop${n - noted === 1 ? "" : "s"} have no tour note.` : "",
+            links: `<a href="index.html#story-${slug(st.value)}">Open the story on the map</a>`
+          };
+        })
+      }
+    ];
+
+    /* ---------- draw ---------- */
+    const all = [];
+    $("blocks").innerHTML = blocks.map(b => {
+      b.tasks.forEach(t => all.push(t));
+      return `<section class="block" id="b-${b.id}">
+        <div class="block-head"><span class="pri">${esc(b.pri)}</span><h2>${esc(b.title)}</h2><span class="count" data-count="${b.id}"></span></div>
+        <p class="why">${esc(b.why)} <a href="#guides" data-guide="${esc(b.how)}">How to fix these</a></p>
+        ${b.download && b.tasks.length ? `<div class="tools"><button type="button" class="small" data-dl="${b.id}">${esc(b.download.label)}</button></div>` : ""}
+        <ul class="tasks">${b.tasks.length ? b.tasks.map(t => `<li data-key="${esc(t.key)}"><input type="checkbox" aria-label="Done">
+          <span class="t-title">${t.title}</span>
+          ${t.body ? `<span class="t-body">${t.body}</span>` : ""}
+          ${t.now ? `<span class="t-now">${t.now}</span>` : ""}
+          ${t.links ? `<span class="t-links">${t.links}</span>` : ""}</li>`).join("") : `<li class="empty">Nothing left here.</li>`}</ul>
+      </section>`;
+    }).join("");
+
+    function refresh() {
+      document.querySelectorAll("ul.tasks li[data-key]").forEach(li => {
+        const on = !!ticks[li.dataset.key];
+        li.classList.toggle("done", on); li.querySelector("input").checked = on;
+      });
+      blocks.forEach(b => {
+        const done = b.tasks.filter(t => ticks[t.key]).length;
+        document.querySelector(`[data-count="${b.id}"]`).textContent = b.tasks.length ? `${done} of ${b.tasks.length} ticked` : "all clear";
+      });
+      const done = all.filter(t => ticks[t.key]).length;
+      $("progTxt").innerHTML = `<b>${done}</b> of <b>${all.length}</b> ticked`;
+      $("progBar").style.width = all.length ? (100 * done / all.length) + "%" : "100%";
+    }
+    $("blocks").addEventListener("change", e => {
+      const li = e.target.closest("li[data-key]"); if (!li) return;
+      if (e.target.checked) ticks[li.dataset.key] = new Date().toISOString().slice(0, 10); else delete ticks[li.dataset.key];
+      save(); refresh();
+    });
+    $("blocks").addEventListener("click", e => {
+      const g = e.target.closest("[data-guide]");
+      if (g) { const d = [...document.querySelectorAll("details.how")].find(x => x.querySelector("summary").textContent === g.dataset.guide); if (d) { d.open = true; e.preventDefault(); d.scrollIntoView({ behavior: "smooth", block: "start" }); } }
+      const dl = e.target.closest("[data-dl]");
+      if (dl) {
+        const b = blocks.find(x => x.id === dl.dataset.dl);
+        const csv = b.download.rows().map(r => r.map(v => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v)).join(",")).join("\n");
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+        a.download = b.download.name; document.body.appendChild(a); a.click(); a.remove();
+      }
+    });
+    $("hideDone").addEventListener("change", e => document.body.classList.toggle("hide-done", e.target.checked));
+    $("copyList").onclick = async () => {
+      const txt = blocks.map(b => `${b.title.toUpperCase()}\n` + (b.tasks.length ? b.tasks.map(t => `${ticks[t.key] ? "[x]" : "[ ]"} ${t.title.replace(/<[^>]+>/g, "")} — ${(t.body || "").replace(/<[^>]+>/g, "")}`).join("\n") : "(nothing left)")).join("\n\n");
+      try { await navigator.clipboard.writeText(txt); $("copyList").textContent = "Copied"; } catch (e) { $("copyList").textContent = "Couldn't copy"; }
+      setTimeout(() => $("copyList").textContent = "Copy the list as text", 1500);
+    };
+    refresh();
+  } catch (e) {
+    $("blocks").innerHTML = `<p class="lede bad">The list couldn't be built: ${esc(e.message)}</p>`;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>

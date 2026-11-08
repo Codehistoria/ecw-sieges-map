@@ -9,6 +9,7 @@ The map reads the spreadsheet and the settings file **every time it loads**, so 
 ```
 index.html              the map page
 check.html              data checker: lists problems in the spreadsheet and missing photos
+todo.html               to-do list: what still needs fixing, most important first, with guides
 config/
   config.json           settings: titles, colours, sides, stories, years, map view, labels
   README.md             what every setting does
@@ -56,6 +57,12 @@ js/vendor/              Leaflet and PapaParse (third-party libraries; leave alon
 | Latitude, Longitude | Decimal degrees, e.g. `53.0762`, `-0.8082`. |
 
 A row with no dates, no sides and no outcome (like the "London" introduction row) is left off the map.
+
+## The to-do list
+
+`todo.html` lists everything that still needs doing to the data, most important first: things shown wrongly on the map, photo credits, missing photo files, other review points, the checker's automatic findings, and a read-through of each story. It is rebuilt from the data each time it opens, so fixed items drop off by themselves. Ticks are kept in your browser only; the lasting record is the data (and setting a reviewed issue's Status to `Resolved` in `data/known-issues.csv`). It also has step-by-step guides, a caption builder for photo credits, and downloadable lists of the credits and photos still needed.
+
+Any siege can be linked to directly with `index.html?siege=` and its ID, e.g. `index.html?siege=139.2`.
 
 ## Stories
 

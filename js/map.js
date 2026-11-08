@@ -727,6 +727,10 @@
     map.flyToBounds([[sv.south, sv.west], [sv.north, sv.east]], { padding: [10, 10], duration: reduceMotion ? 0 : 0.8 });
   };
   render(!!fromHash);
+  // open one siege named in the link: index.html?siege=139.2
+  const askedFor = new URLSearchParams(location.search).get("siege");
+  const askedSiege = askedFor && DATA.find(d => d.id === askedFor.trim());
+  if (askedSiege) setTimeout(() => focusSiege(askedSiege), 300);
   // following a story link while the page is already open
   addEventListener("hashchange", () => {
     const st = STORIES.find(s => location.hash === "#story-" + slug(s.value));
