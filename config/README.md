@@ -13,6 +13,7 @@ Colours are written as hex codes like `"#9a1c2c"`. Any colour picker gives you o
 | `intro` | The paragraph under the heading. |
 | `footer` | The note at the bottom of the side panel (source, date conventions). |
 | `searchPlaceholder` | Grey text in the search box. |
+| `startHereButton`, `startHereNote` | The wording of the red "Start here" button under the introduction, which opens the overview story and starts its tour. |
 | `storiesIntro` | The short explanation under the Stories heading, saying what choosing a story does. |
 
 ## `github`
@@ -82,6 +83,7 @@ How the story tours look (see "Stories" in the main README).
 |---|---|
 | `startView` | The area shown when the page opens: `south`, `west`, `north`, `east` in degrees. |
 | `minZoom`, `maxZoom` | How far out and in you can zoom (5 shows all of Britain and Ireland; 12 is street level). |
+| `startHereStory` | The Tag of the story the "Start here" button opens (`"Start here"`). Set to `""` to hide the button. |
 | `zoomWhenSiegeChosen` | How close the map flies in when you pick a siege from the list. |
 | `groupSiegesWithinKm` | Sieges closer than this share one marker with a counter. `0` turns grouping off. |
 | `markerScale` | Make all circles bigger (`1.3`) or smaller (`0.8`). |

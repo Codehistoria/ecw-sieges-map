@@ -84,7 +84,7 @@ Stories live in `data/stories.csv`, one row each:
 | Title | The story's name on its button and panel. |
 | Summary | One sentence, shown in italics and when hovering the button. |
 | Story | The account that connects the sieges. Leave a blank line between paragraphs. |
-| Order | The order of the tour: `date` (oldest first) or `length` (longest first). |
+| Order | The order of the tour: `date` (by start date), `end` (by the date each siege ended, useful when the story is told through outcomes) or `length` (longest first). |
 | Tour | `visit` or `route` (see above). If empty, the `tours.default` setting is used. |
 | Side | For `route` stories: the commander's side (`Royalists`, `Parliamentarians` or `Scots`), which sets the colour of the route. |
 

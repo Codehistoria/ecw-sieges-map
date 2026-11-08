@@ -402,7 +402,9 @@
 
   // Sieges in story order: by date (undated last), or longest first for "length" stories.
   const byDate = (a, b) => (a.s || a.e ? 0 : 1) - (b.s || b.e ? 0 : 1) || sortKey(a).localeCompare(sortKey(b));
-  const storySeq = v => visible().filter(d => inStory(d, v)).sort(STORY[v] && STORY[v].order === "long" ? (a, b) => (b.d ?? -1) - (a.d ?? -1) : byDate);
+  // "end": by the date each siege ended, for stories told through outcomes
+  const byEnd = (a, b) => (a.e || a.s ? 0 : 1) - (b.e || b.s ? 0 : 1) || (a.e || a.s || "9999").localeCompare(b.e || b.s || "9999");
+  const storySeq = v => visible().filter(d => inStory(d, v)).sort(STORY[v] && STORY[v].order === "long" ? (a, b) => (b.d ?? -1) - (a.d ?? -1) : STORY[v] && STORY[v].order === "end" ? byEnd : byDate);
 
   function selectStory(v, fit) {
     endTour(); routeDone = null;
@@ -437,7 +439,7 @@
       </div>
       <p class="sc-how">${st.tour === "route"
         ? (routeDone === st.value ? "Tour complete: the whole route is shown." : "The grey line is the whole route. Following the story draws it in leg by leg.")
-        : `The tour visits the sieges ${st.order === "long" ? "from the longest to the shortest" : "in date order"}; places already visited and those still to come are faded.`}</p>`;
+        : `The tour visits the sieges ${st.order === "long" ? "from the longest to the shortest" : st.order === "end" ? "in the order they ended" : "in date order"}; places already visited and those still to come are faded.`}</p>`;
     $("tourStart").onclick = () => startTour();
     $("storyClear").onclick = () => selectStory(null, false);
   }
@@ -493,7 +495,8 @@
   // "From Hougham House: 3 months later, 15 miles to the south-west."
   const ymd = iso => (iso || "").split("-").map(Number);
   function gapText(a, b) {
-    const A = ymd(a.s || a.e), B = ymd(b.s || b.e);
+    const byEnds = STORY[state.story] && STORY[state.story].order === "end";
+    const A = ymd(byEnds ? a.e || a.s : a.s || a.e), B = ymd(byEnds ? b.e || b.s : b.s || b.e);
     if (!A[0] || !B[0]) return "";
     if (A[1] && A[2] && B[1] && B[2]) {
       const days = Math.round((Date.UTC(B[0], B[1] - 1, B[2]) - Date.UTC(A[0], A[1] - 1, A[2])) / 864e5);
@@ -519,7 +522,9 @@
     const where = k < 1.5 ? "at the same place" : `${miles < 1 ? "under a mile" : miles + " mile" + (miles === 1 ? "" : "s")} to the ${dir}`;
     let when = gapText(a, b);
     const aEnd = a.e || a.s, bStart = b.s;
-    if (bStart && aEnd && a.s && bStart > a.s && bStart < aEnd && when) when += ", while that siege was still going on";
+    const endOrder = STORY[state.story] && STORY[state.story].order === "end";   // there the gap is between the ends of the sieges
+    if (!endOrder && bStart && aEnd && a.s && bStart > a.s && bStart < aEnd && when) when += ", while that siege was still going on";
+    else if (endOrder && when) when = "ended " + when.replace(/^the same/, "in the same").replace("in the same day", "on the same day");
     return `From ${a.p}: ${[when, where].filter(Boolean).join(", ")}.`;
   }
 
@@ -710,6 +715,15 @@
   const fromHash = STORIES.find(s => location.hash === "#story-" + slug(s.value));
   if (fromHash) { $("storiesBox").open = true; state.story = fromHash.value; openGroup = fromHash.group || ""; setSort(fromHash.order === "long" ? "long" : "date"); }
   drawGroups();
+
+  // "Start here": a button under the introduction that opens the overview story and starts its tour
+  const SH = M.startHereStory && STORY[M.startHereStory];
+  if (SH) {
+    $("startHere").hidden = false;
+    $("startHereTitle").textContent = T.startHereButton || "Take the tour";
+    $("startHereSub").textContent = T.startHereNote || SH.label;
+    $("startHere").onclick = () => { selectStory(SH.value, false); startTour(); };
+  }
 
   // "Show all sieges": clears every filter and the tour, and returns to the whole map
   $("resetAll").onclick = () => {
