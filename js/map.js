@@ -716,7 +716,7 @@
   if (fromHash) { $("storiesBox").open = true; state.story = fromHash.value; openGroup = fromHash.group || ""; setSort(fromHash.order === "long" ? "long" : "date"); }
   drawGroups();
 
-  // "Start here": a button under the introduction that opens the overview story and starts its tour
+  // "Start here": a button under the introduction that opens the overview story and starts its tour.
   const SH = M.startHereStory && STORY[M.startHereStory];
   if (SH) {
     // Regular visitors can shrink it to a small chip; remembered in this browser (and shrunk automatically
@@ -725,16 +725,28 @@
     const remember = v => { try { localStorage.setItem(KEY, v ? "1" : "0"); } catch (e) {} };
     let small = false;
     try { small = localStorage.getItem(KEY) === "1"; } catch (e) {}
+    // Once made smaller it leaves the side panel and becomes a small button on the map, under Cities and Towns.
+    const TourButton = L.Control.extend({
+      options: { position: "topleft" },
+      onAdd() {
+        const b = L.DomUtil.create("button", "leaflet-bar map-tour");
+        b.type = "button"; b.title = T.startHereNote || SH.label;
+        b.innerHTML = `<span aria-hidden="true">▶</span> ${esc(T.startHereShort || "Take the tour")}`;
+        L.DomEvent.disableClickPropagation(b);
+        b.onclick = () => { selectStory(SH.value, false); startTour(); };
+        return b;
+      }
+    });
+    const mapTour = new TourButton();
     const wrap = $("startWrap"), setSmall = v => {
-      wrap.classList.toggle("small", v);
-      $("startHereTitle").textContent = v ? (T.startHereShort || "Take the tour") : (T.startHereButton || "Take the tour");
-      $("startHere").title = v ? (T.startHereNote || SH.label) : "";
+      wrap.hidden = v;
+      if (v) map.addControl(mapTour); else mapTour.remove();
     };
-    wrap.hidden = false;
+    $("startHereTitle").textContent = T.startHereButton || "Take the tour";
     $("startHereSub").textContent = T.startHereNote || SH.label;
     setSmall(small);
     $("startHere").onclick = () => { remember(true); selectStory(SH.value, false); startTour(); };
-    $("startMin").onclick = () => { remember(true); setSmall(true); $("startHere").focus(); };
+    $("startMin").onclick = () => { remember(true); setSmall(true); };
   }
 
   // "Show all sieges": clears every filter and the tour, and returns to the whole map
