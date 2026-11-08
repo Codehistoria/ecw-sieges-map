@@ -10,6 +10,7 @@
     "searchPlaceholder": "Find a place or county",
     "startHereButton": "New here? The story of the wars",
     "startHereNote": "Thirteen sieges, 1642–1652 · about five minutes",
+    "helpLink": "How to use this map",
     "storiesIntro": "A story picks out the sieges that share a thread: how they ended, a campaign, a commander, a theme. Choose one and the map shows only those sieges, with an account of what links them. Then follow the story to visit each siege in turn."
   },
 
@@ -68,6 +69,16 @@
     { "value": "Parliamentarians", "label": "Parliament", "plural": "Parliamentarians", "colour": "#24508f" },
     { "value": "Royalists", "label": "Royalists", "plural": "Royalists", "colour": "#b0202e" },
     { "value": "Scots", "label": "Scots", "plural": "the Scots", "colour": "#e0ad1f" }
+  ],
+
+  "help_help": "The 'How to use this map' guide: one step per part of the page. 'target' is the part to point at (#map, #storiesBox, #hist, #sides, #sizeToggle, #search, #resetAll); add, remove, reorder or reword freely.",
+  "help": [
+    { "target": "#map", "title": "The map", "text": "Each circle is a siege, coloured by the side that prevailed: blue for Parliament, red for the Royalists, yellow for the Scots. A number means several sieges at one place. Click a circle to read about it, and zoom in to see the names." },
+    { "target": "#storiesBox", "title": "Stories", "text": "Open Stories to pick a thread: how sieges ended, a campaign, a commander or a theme. The map shows only those sieges, with an account of what links them, and Follow the story takes you through them one at a time." },
+    { "target": "#hist", "title": "Sieges begun, by year", "text": "Click a year to see only the sieges that began then, or press Play to watch the wars unfold year by year." },
+    { "target": "#sides", "title": "Who prevailed", "text": "Untick a side to hide the sieges it won. Underneath, you can size the circles by how long each siege lasted." },
+    { "target": "#search", "title": "Find a siege", "text": "Search for a place or a county, or sort the list by length, date or name. Click any entry to fly to it on the map." },
+    { "target": "#resetAll", "title": "Show all sieges", "text": "Clears every story, year, side and search and takes you back to the whole map. It stays at the top of the panel as you scroll." }
   ],
 
   "tours": {

@@ -369,3 +369,22 @@ path.leg-now { animation: leg-march 1.2s linear infinite; }
 .start-wrap .start-here { margin-top: 0; }
 .start-min { flex: none; width: 28px; height: 28px; border: 1px solid var(--rule); border-radius: 50%; background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 0 2px; }
 .start-min:hover { border-color: var(--ink); color: var(--ink); }
+
+/* "How to use this map" link and guide */
+.help-link { margin-top: 10px; display: inline-flex; align-items: center; gap: 7px; border: 0; background: none; padding: 2px 0; font-family: var(--f-ui); font-size: 13.5px; color: var(--ink-soft); cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+.help-link span[aria-hidden] { width: 18px; height: 18px; border: 1px solid currentColor; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; text-decoration: none; }
+.help-link:hover { color: var(--ink); }
+.start-wrap + .help-link { display: flex; }
+.help-layer { position: fixed; inset: 0; z-index: 3000; }
+.help-catch { position: absolute; inset: 0; }
+.help-spot { position: fixed; border-radius: 4px; box-shadow: 0 0 0 9999px rgba(30, 20, 8, .55); outline: 2px solid #fff8ec; pointer-events: none; transition: left .25s, top .25s, width .25s, height .25s; }
+.help-card { position: fixed; width: min(340px, calc(100vw - 32px)); background: var(--paper); color: var(--ink); border: 1px solid var(--ink); outline: 1px solid var(--ink); outline-offset: 3px; box-shadow: 0 6px 22px rgba(30, 20, 8, .45); padding: 12px 16px 12px; }
+.help-card .h-top { display: flex; align-items: center; justify-content: space-between; font-family: var(--f-ui); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+.help-card .h-x { width: 26px; height: 26px; border: 1px solid var(--ink); background: var(--paper); cursor: pointer; font-size: 17px; line-height: 22px; padding: 0; }
+.help-card h3 { font-family: var(--f-display); font-weight: 400; font-size: 22px; margin: 0 0 4px; }
+.help-card p { margin: 0 0 12px; font-size: 15px; line-height: 1.45; }
+.help-card .h-nav { display: flex; justify-content: space-between; gap: 8px; }
+.help-card .h-nav button { font-family: var(--f-ui); font-size: 13px; min-height: 32px; padding: 4px 14px; border: 1px solid var(--ink); background: transparent; cursor: pointer; border-radius: 2px; }
+.help-card .h-next { background: var(--ink) !important; color: var(--paper); }
+.help-card .h-nav button:disabled { opacity: .4; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .help-spot { transition: none; } }

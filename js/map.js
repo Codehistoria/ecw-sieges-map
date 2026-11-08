@@ -732,6 +732,78 @@
     $("startMin").onclick = () => { hide(); $("startWrap").hidden = true; };
   }
 
+  /* "How to use this map": a short guide that points at each part of the page in turn.
+     The steps are in the settings file (help). A dimmed page with a spotlight on the part being described. */
+  const HELP = (cfg.help || []).filter(h => h && h.target && document.querySelector(h.target));
+  if (!HELP.length) $("helpOpen").hidden = true;
+  else {
+    $("helpLinkText").textContent = T.helpLink || "How to use this map";
+    let hi = -1, helpEls = null;
+    // in the side panel, light up the whole section, unless it's taller than the screen (the long list), then just the target's row
+    const sideOfPage = el => {
+      if (!el.closest(".key") || el.id === "resetAll") return el;
+      const sec = el.closest("section, details") || el;
+      return sec.offsetHeight > innerHeight * 0.6 ? (el.parentElement || el) : sec;
+    };
+    function placeHelp() {
+      if (hi < 0) return;
+      const el = sideOfPage(document.querySelector(HELP[hi].target)), r = el.getBoundingClientRect(), pad = 6;
+      Object.assign(helpEls.spot.style, { left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
+      const card = helpEls.card, vw = innerWidth, vh = innerHeight, cw = card.offsetWidth, ch = card.offsetHeight, gap = 12;
+      let x, y;
+      if (vw < 600) { x = (vw - cw) / 2; y = r.top > vh / 2 ? Math.max(8, r.top - pad - gap - ch) : Math.min(vh - ch - 8, r.bottom + pad + gap); }
+      else if (r.right + gap + cw < vw - 8 && r.width < vw * 0.45) { x = r.right + pad + gap; y = Math.min(Math.max(8, r.top), vh - ch - 8); }
+      else if (r.bottom + pad + gap + ch < vh - 8) { x = Math.min(Math.max(8, r.left), vw - cw - 8); y = r.bottom + pad + gap; }
+      else if (r.top - pad - gap - ch > 8) { x = Math.min(Math.max(8, r.left), vw - cw - 8); y = r.top - pad - gap - ch; }
+      else { x = Math.min(Math.max(8, r.left + 16), vw - cw - 8); y = Math.min(Math.max(8, r.top + 16), vh - ch - 8); }
+      Object.assign(card.style, { left: x + "px", top: y + "px" });
+    }
+    function showHelp(i) {
+      hi = i;
+      const h = HELP[i], el = sideOfPage(document.querySelector(h.target));
+      el.scrollIntoView({ block: el.offsetHeight > innerHeight * 0.7 ? "start" : "center", behavior: "auto" });
+      helpEls.card.querySelector(".h-step").textContent = `${i + 1} of ${HELP.length}`;
+      helpEls.card.querySelector("h3").textContent = h.title || "";
+      helpEls.card.querySelector("p").textContent = h.text || "";
+      helpEls.prev.disabled = i === 0;
+      helpEls.next.textContent = i === HELP.length - 1 ? "Done" : "Next ›";
+      requestAnimationFrame(placeHelp);
+      helpEls.next.focus({ preventScroll: true });
+    }
+    function closeHelp() {
+      if (hi < 0) return;
+      hi = -1; helpEls.wrap.remove(); helpEls = null;
+      removeEventListener("resize", placeHelp); removeEventListener("scroll", placeHelp, true);
+      $("helpOpen").focus({ preventScroll: true });
+    }
+    $("helpOpen").onclick = () => {
+      if (helpEls) return;
+      endTour(); map.closePopup();
+      const wrap = document.createElement("div");
+      wrap.className = "help-layer";
+      wrap.innerHTML = `<div class="help-catch"></div><div class="help-spot"></div>
+        <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+          <div class="h-top"><span class="h-step"></span><button type="button" class="h-x" aria-label="Close the guide">×</button></div>
+          <h3 id="helpTitle"></h3><p></p>
+          <div class="h-nav"><button type="button" class="h-prev">‹ Back</button><button type="button" class="h-next">Next ›</button></div>
+        </div>`;
+      document.body.appendChild(wrap);
+      helpEls = { wrap, spot: wrap.querySelector(".help-spot"), card: wrap.querySelector(".help-card"), prev: wrap.querySelector(".h-prev"), next: wrap.querySelector(".h-next") };
+      helpEls.prev.onclick = () => showHelp(hi - 1);
+      helpEls.next.onclick = () => hi === HELP.length - 1 ? closeHelp() : showHelp(hi + 1);
+      wrap.querySelector(".h-x").onclick = closeHelp;
+      wrap.querySelector(".help-catch").onclick = closeHelp;
+      addEventListener("resize", placeHelp); addEventListener("scroll", placeHelp, true);
+      showHelp(0);
+    };
+    document.addEventListener("keydown", e => {
+      if (hi < 0) return;
+      if (e.key === "Escape") closeHelp();
+      else if (e.key === "ArrowRight" && hi < HELP.length - 1) showHelp(hi + 1);
+      else if (e.key === "ArrowLeft" && hi > 0) showHelp(hi - 1);
+    });
+  }
+
   // "Show all sieges": clears every filter and the tour, and returns to the whole map
   $("resetAll").onclick = () => {
     endTour(); stopPlay(); map.closePopup();

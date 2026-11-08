@@ -14,6 +14,7 @@ Colours are written as hex codes like `"#9a1c2c"`. Any colour picker gives you o
 | `footer` | The note at the bottom of the side panel (source, date conventions). |
 | `searchPlaceholder` | Grey text in the search box. |
 | `startHereButton`, `startHereNote` | The wording of the red "Start here" button under the introduction, which opens the overview story and starts its tour. Visitors can hide it with ×, and it stays hidden on later visits once they've taken the tour (remembered in their browser); the tour is always available as the first tab under Stories. |
+| `helpLink` | The wording of the "How to use this map" link under the introduction. |
 | `storiesIntro` | The short explanation under the Stories heading, saying what choosing a story does. |
 
 ## `github`
@@ -54,6 +55,10 @@ One entry per side. `value` must match the spreadsheet's MAP Attacker/Defender/O
 ## `stories`
 
 Only used if `data.stories` is removed: the stories now come from `data/stories.csv`, which also holds each story's group, summary and account. In this fallback list `value` matches the spreadsheet's Themes or Tags column, `label` is the button text, and `sort` is the order: `"long"` (longest first) or `"date"`.
+
+## `help`
+
+The steps of the "How to use this map" guide, in order. Each has a `target` (the part of the page to point at: `#map`, `#storiesBox`, `#hist`, `#sides`, `#sizeToggle`, `#search` or `#resetAll`), a `title` and a `text`. Add, remove, reorder or reword them freely; a step whose target isn't on the page is skipped.
 
 ## `tours`
 
