@@ -1,6 +1,6 @@
 # Sieges of the Civil Wars
 
-An interactive map of the 287 sieges of the British and Irish Civil Wars (1640–1654), compiled for the National Civil War Centre, Newark. It is a single web page built with [Leaflet](https://leafletjs.com). It needs no ArcGIS licence and no server software, and it can be hosted free on GitHub Pages.
+An interactive map of the 287 sieges of the British and Irish Civil Wars (1640–1654), compiled for the National Civil War Centre, Newark. It is a single web page built with [Leaflet](https://leafletjs.com). It needs no ArcGIS licence and no server software, and it can be hosted free on GitHub Pages. 
 
 The map reads the spreadsheet and the settings file **every time it loads**, so to change what it shows you edit those files. You don't need to change any code.
 
