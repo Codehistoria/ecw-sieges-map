@@ -14,6 +14,7 @@ Colours are written as hex codes like `"#9a1c2c"`. Any colour picker gives you o
 | `footer` | The note at the bottom of the side panel (source, date conventions). |
 | `searchPlaceholder` | Grey text in the search box. |
 | `startHereButton`, `startHereNote` | The wording of the red "Start here" button under the introduction, which opens the overview story and starts its tour. |
+| `startHereShort` | Its wording once a visitor has made it smaller with the – button (remembered in their browser, and applied automatically after they've taken the tour once). |
 | `storiesIntro` | The short explanation under the Stories heading, saying what choosing a story does. |
 
 ## `github`

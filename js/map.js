@@ -719,10 +719,22 @@
   // "Start here": a button under the introduction that opens the overview story and starts its tour
   const SH = M.startHereStory && STORY[M.startHereStory];
   if (SH) {
-    $("startHere").hidden = false;
-    $("startHereTitle").textContent = T.startHereButton || "Take the tour";
+    // Regular visitors can shrink it to a small chip; remembered in this browser (and shrunk automatically
+    // for their next visit once they've taken the tour).
+    const KEY = "siege-map-start-small";
+    const remember = v => { try { localStorage.setItem(KEY, v ? "1" : "0"); } catch (e) {} };
+    let small = false;
+    try { small = localStorage.getItem(KEY) === "1"; } catch (e) {}
+    const wrap = $("startWrap"), setSmall = v => {
+      wrap.classList.toggle("small", v);
+      $("startHereTitle").textContent = v ? (T.startHereShort || "Take the tour") : (T.startHereButton || "Take the tour");
+      $("startHere").title = v ? (T.startHereNote || SH.label) : "";
+    };
+    wrap.hidden = false;
     $("startHereSub").textContent = T.startHereNote || SH.label;
-    $("startHere").onclick = () => { selectStory(SH.value, false); startTour(); };
+    setSmall(small);
+    $("startHere").onclick = () => { remember(true); selectStory(SH.value, false); startTour(); };
+    $("startMin").onclick = () => { remember(true); setSmall(true); $("startHere").focus(); };
   }
 
   // "Show all sieges": clears every filter and the tour, and returns to the whole map

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Alegreya:ital,wght@0,400;0,600;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="js/vendor/leaflet.css">
-<link rel="stylesheet" href="css/map.css?v=20261108-6">
+<link rel="stylesheet" href="css/map.css?v=20261108-7">
 </head>
 <body>
 <div class="app">
@@ -18,7 +18,10 @@
       <div class="eyebrow" id="eyebrow"></div>
       <h1 id="title"></h1>
       <p id="intro"></p>
-      <button type="button" class="start-here" id="startHere" hidden><span class="sh-play" aria-hidden="true">▶</span><span><b id="startHereTitle"></b><small id="startHereSub"></small></span></button>
+      <div class="start-wrap" id="startWrap" hidden>
+        <button type="button" class="start-here" id="startHere"><span class="sh-play" aria-hidden="true">▶</span><span><b id="startHereTitle"></b><small id="startHereSub"></small></span></button>
+        <button type="button" class="start-min" id="startMin" aria-label="Make the tour button smaller" title="Make smaller">–</button>
+      </div>
     </header>
 
     <div class="topbar">
@@ -102,7 +105,7 @@
 
 <script src="js/vendor/leaflet.js"></script>
 <script src="js/vendor/papaparse.min.js"></script>
-<script src="js/data.js?v=20261108-6"></script>
-<script src="js/map.js?v=20261108-6"></script>
+<script src="js/data.js?v=20261108-7"></script>
+<script src="js/map.js?v=20261108-7"></script>
 </body>
 </html>

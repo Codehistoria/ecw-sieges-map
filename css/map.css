@@ -365,3 +365,12 @@ path.leg-now { animation: leg-march 1.2s linear infinite; }
 .start-here .sh-play { flex: none; width: 30px; height: 30px; border-radius: 50%; background: #fff8ec; color: var(--roy); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; padding-left: 2px; }
 .start-here b { display: block; font-family: var(--f-ui); font-size: 15px; }
 .start-here small { display: block; font-family: var(--f-ui); font-size: 12px; opacity: .85; }
+.start-wrap { margin-top: 12px; display: flex; align-items: center; gap: 8px; }
+.start-wrap .start-here { margin-top: 0; }
+.start-min { flex: none; width: 28px; height: 28px; border: 1px solid var(--rule); border-radius: 50%; background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 0 2px; }
+.start-min:hover { border-color: var(--ink); color: var(--ink); }
+.start-wrap.small .start-min { display: none; }
+.start-wrap.small .start-here { gap: 7px; padding: 4px 12px 4px 5px; box-shadow: none; }
+.start-wrap.small .sh-play { width: 22px; height: 22px; font-size: 9px; }
+.start-wrap.small .start-here b { font-size: 13px; }
+.start-wrap.small .start-here small { display: none; }
