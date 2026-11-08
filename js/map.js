@@ -646,7 +646,7 @@
     tour.i = Math.max(0, Math.min(i, tour.list.length - 1));
     const d = tour.list[tour.i], n = tour.list.length, st = STORY[state.story];
     tourEl.querySelector(".tour-title").textContent = st ? st.label : "";
-    tourEl.querySelector(".tour-step").textContent = `${tour.i + 1} of ${n}`;
+    tourEl.querySelector(".tour-step").innerHTML = `${tour.i + 1} <span class="of">of</span> ${n}`;
     tourEl.querySelector(".tour-place").textContent = d.p;
     // the pulsing ring on the map is drawn in the attackers' colour; this says so
     const att = d.a ? `<span class="att" style="--c:${colour(d.a)}"><i></i>${esc(SIDE[d.a].plural || SIDE[d.a].label)} attacking</span>` : "";
