@@ -356,3 +356,5 @@ path.leg-now { animation: leg-march 1.2s linear infinite; }
   .pop figure img { max-height: 110px; }
   .plate.popup-open .leaflet-top, .plate.popup-open .leaflet-control-scale { opacity: 0; pointer-events: none; }
 }
+.tour-when .att { display: inline-flex; align-items: center; gap: 5px; }
+.tour-when .att i { width: 11px; height: 11px; border-radius: 50%; border: 2.5px solid var(--c); box-sizing: border-box; }

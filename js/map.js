@@ -469,7 +469,7 @@
     }
     if (tour) {
       const d = tour.list[tour.i];
-      L.circleMarker([d.lat, d.lng], { radius: 17, color: "#9a1c2c", weight: 2.5, fill: false, interactive: false, className: "tour-ring" }).addTo(routeLayer);
+      L.circleMarker([d.lat, d.lng], { radius: 17, color: d.a ? colour(d.a) : "#9a1c2c", weight: 3, fill: false, interactive: false, className: "tour-ring" }).addTo(routeLayer);
     }
     fadeMarkers();
   }
@@ -557,7 +557,9 @@
     tourEl.querySelector(".tour-title").textContent = st ? st.label : "";
     tourEl.querySelector(".tour-step").textContent = `${tour.i + 1} of ${n}`;
     tourEl.querySelector(".tour-place").textContent = d.p;
-    tourEl.querySelector(".tour-when").innerHTML = [esc(fmtRange(d.s, d.e)) + (d.dl ? " · " + esc(d.dl) : ""), d.w ? `<span class="pill" style="color:${colour(d.w)}"><i></i>${esc(SIDE[d.w].label)} prevailed</span>` : ""].filter(Boolean).join(" ");
+    // the pulsing ring on the map is drawn in the attackers' colour; this says so
+    const att = d.a ? `<span class="att" style="--c:${colour(d.a)}"><i></i>${esc(SIDE[d.a].plural || SIDE[d.a].label)} attacking</span>` : "";
+    tourEl.querySelector(".tour-when").innerHTML = [esc(fmtRange(d.s, d.e)) + (d.dl ? " · " + esc(d.dl) : ""), att, d.w ? `<span class="pill" style="color:${colour(d.w)}"><i></i>${esc(SIDE[d.w].label)} prevailed</span>` : ""].filter(Boolean).join(" ");
     // why this siege belongs to the story (data/story-steps.csv), or the siege's own headline
     tourEl.querySelector(".tour-head").textContent = STEPS.get(state.story + "|" + d.id) || d.h || "";
     tourEl.querySelector(".tour-leg").textContent = tour.i ? legText(tour.list[tour.i - 1], d) : (n > 1 ? `The first of ${n} sieges in this story.` : "The only siege in this story.");
