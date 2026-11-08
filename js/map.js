@@ -439,7 +439,7 @@
       </div>
       <p class="sc-how">${st.tour === "route"
         ? (routeDone === st.value ? "Tour complete: the whole route is shown." : "The grey line is the whole route. Following the story draws it in leg by leg.")
-        : `The tour visits the sieges ${st.order === "long" ? "from the longest to the shortest" : st.order === "end" ? "in the order they ended" : "in date order"}; places already visited and those still to come are faded.`}</p>`;
+        : `Following the story visits the sieges ${st.order === "long" ? "from the longest to the shortest" : st.order === "end" ? "in the order they ended" : "in date order"}; places already visited and those still to come are faded.`}</p>`;
     $("tourStart").onclick = () => startTour();
     $("storyClear").onclick = () => selectStory(null, false);
   }
@@ -726,7 +726,7 @@
     let hidden = false;
     try { hidden = localStorage.getItem(KEY) === "1"; } catch (e) {}
     $("startWrap").hidden = hidden;
-    $("startHereTitle").textContent = T.startHereButton || "Take the tour";
+    $("startHereTitle").textContent = T.startHereButton || "The story of the wars";
     $("startHereSub").textContent = T.startHereNote || SH.label;
     $("startHere").onclick = () => { hide(); selectStory(SH.value, false); startTour(); };
     $("startMin").onclick = () => { hide(); $("startWrap").hidden = true; };
