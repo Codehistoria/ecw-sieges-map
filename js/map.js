@@ -116,9 +116,32 @@
   window.__photoLoaded = img => {
     img.classList.add("ok");
     if (img.dataset.cap !== "1") return;
-    const cap = JSON.parse(img.dataset.caps)[+img.dataset.i];
+    const i = +img.dataset.i, cap = JSON.parse(img.dataset.caps)[i];
     const fc = img.parentElement.querySelector("figcaption");
     if (fc) { fc.textContent = cap; fc.hidden = !cap; }
+    // In the pop-up, every photo that exists can be shown (Image 1 and Image 2): check the rest once.
+    if (img.dataset.probed) return;
+    img.dataset.probed = 1;
+    const srcs = JSON.parse(img.dataset.srcs), ok = [i], rest = srcs.map((_, k) => k).filter(k => k > i);
+    let left = rest.length;
+    const done = () => {
+      if (--left) return;
+      if (ok.length < 2) return;
+      ok.sort((a, b) => a - b);
+      img.dataset.ok = JSON.stringify(ok);
+      const nav = img.parentElement.querySelector(".ph-nav");
+      if (nav) { nav.querySelector("span").textContent = `1 of ${ok.length}`; nav.hidden = false; }
+    };
+    rest.forEach(k => { const t = new Image(); t.onload = () => { ok.push(k); done(); }; t.onerror = done; t.src = srcs[k]; });
+  };
+  window.__stepPhoto = (fig, step) => {
+    const img = fig.querySelector("img"), ok = JSON.parse(img.dataset.ok || "[]");
+    if (ok.length < 2) return null;
+    const pos = (ok.indexOf(+img.dataset.i) + step + ok.length) % ok.length;
+    img.dataset.i = ok[pos];
+    img.src = JSON.parse(img.dataset.srcs)[ok[pos]];
+    fig.querySelector(".ph-nav span").textContent = `${pos + 1} of ${ok.length}`;
+    return img;
   };
 
   function totalDays(members) { const k = members.filter(m => m.d != null); return k.length ? k.reduce((s, m) => s + m.d, 0) : null; }
@@ -145,7 +168,7 @@
     const body = (d.b || "").split(/\n+/).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join("");
     const dur = d.dl ? ` · ${esc(d.dl)}` : "";
     const site = d.u ? `<a class="visit" href="${esc(/^https?:/i.test(d.u) ? d.u : "https://" + d.u)}" target="_blank" rel="noopener">Visit the site ↗</a>` : "";
-    const fig = IMG.showInPopup !== false && d.images.length ? `<figure>${imgTag(d, "photo", true)}<figcaption hidden></figcaption></figure>` : "";
+    const fig = IMG.showInPopup !== false && d.images.length ? `<figure>${imgTag(d, "photo", true)}<div class="ph-nav" hidden><button type="button" data-ph="-1" aria-label="Previous photo">‹</button><span></span><button type="button" data-ph="1" aria-label="Next photo">›</button></div><figcaption hidden></figcaption></figure>` : "";
     const where = [d.c, d.n].filter(Boolean).join(", ");
     return `<div class="pop">
       ${fig}
@@ -394,7 +417,8 @@
     if (phone) { g.popup.options.autoPanPaddingTopLeft = [8, 12]; g.popup.options.autoPanPaddingBottomRight = [8, 12]; }
     el.addEventListener("click", e => {
       e.stopPropagation();
-      const fig = e.target.closest("figure");
+      const fig = e.target.closest("figure"), ph = e.target.closest("[data-ph]");
+      if (fig && ph) { const im = window.__stepPhoto(fig, +ph.dataset.ph); if (im) im.addEventListener("load", () => g.popup.update(), { once: true }); return; }
       if (fig && e.target.tagName === "IMG") { fig.classList.toggle("big"); g.popup.update(); return; }
       const b = e.target.closest("button"); if (!b) return;
       if (b.dataset.story) { selectStory(b.dataset.story === state.story ? null : b.dataset.story, false); return; }

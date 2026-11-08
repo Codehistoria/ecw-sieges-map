@@ -345,6 +345,11 @@ path.leg-now { animation: leg-march 1.2s linear infinite; }
 .leaflet-popup-content.leaflet-popup-scrolled { margin: 0; padding: 14px 18px 14px 16px; border: 0; scrollbar-color: var(--rule) transparent; overscroll-behavior: contain; }
 .leaflet-popup-content.leaflet-popup-scrolled .pop figure { margin-top: -14px; }
 .pop figure img { max-height: 150px; cursor: zoom-in; transition: max-height .25s; }
+.pop figure .ph-nav { position: absolute; top: 8px; left: 8px; z-index: 2; display: flex; align-items: center; gap: 0; background: var(--card); color: var(--ink); border: 1px solid var(--ink); border-radius: 3px; font: 600 11.5px/1 var(--f-ui); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.pop figure .ph-nav[hidden] { display: none; }
+.pop figure .ph-nav button { all: unset; cursor: pointer; font-size: 17px; line-height: 1; padding: 3px 8px 5px; }
+.pop figure .ph-nav button:hover, .pop figure .ph-nav button:focus-visible { background: var(--card-soft); }
+.pop figure .ph-nav span { padding: 0 2px; white-space: nowrap; }
 .pop figure.big img { max-height: 70vh; object-fit: contain; background: var(--card-soft); cursor: zoom-out; }
 .pop .body { max-height: none; overflow: visible; padding-right: 0; }
 .pop .where { display: inline; }

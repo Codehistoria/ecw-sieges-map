@@ -54,7 +54,7 @@ js/vendor/              Leaflet and PapaParse (third-party libraries; leave alon
 | Headline, Body Text | The pop-up's text. Line breaks in Body Text become paragraphs. |
 | Website | A link to the site, if there is one. |
 | Image 1, Caption Image 1 | The photo's file name and its caption with the credit. |
-| Image 2, Caption Image 2 | Optional second choice, shown if Image 1's file isn't in the images folder. |
+| Image 2, Caption Image 2 | Optional second photo, e.g. the place alongside a commander's portrait. When both files exist the pop-up shows Image 1 first, with a "1 of 2" switch; if only one exists, that one shows. |
 | Latitude, Longitude | Decimal degrees, e.g. `53.0762`, `-0.8082`. |
 
 A row with no dates, no sides and no outcome (like the "London" introduction row) is left off the map.
