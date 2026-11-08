@@ -169,11 +169,28 @@
 
   const optionalJSON = async url => { if (!url) return null; try { return JSON.parse((await fetchText(url, "utf-8")).text); } catch (e) { console.warn(e); return null; } };
   const [coast, rivers] = await Promise.all([optionalJSON(cfg.data.coastline), M.showRivers === false ? null : optionalJSON(cfg.data.rivers)]);
+  /* The land is drawn by its own renderer, which keeps a wide margin drawn beyond the edges of the view
+     (padding 1 = one screen-width on every side), so panning doesn't uncover undrawn sea. Leaflet normally
+     only redraws vectors when a move ends, stretching the old drawing during a fly-to; the land is light
+     (about 40 KB), so it is redrawn every few frames while the map flies, keeping it sharp and complete. */
+  const landR = L.svg({ padding: 1 });
+  const base = { interactive: false, renderer: landR, smoothFactor: 1.5 };
   if (coast) {
-    L.geoJSON(coast, { interactive: false, style: { color: "#b9b896", weight: 7, opacity: .7, fill: false } }).addTo(map);
-    L.geoJSON(coast, { interactive: false, style: { color: col.ink || "#2a2017", weight: 1.1, fillColor: col.land || "#efe5ca", fillOpacity: 1 } }).addTo(map);
+    L.geoJSON(coast, { ...base, style: { color: "#b9b896", weight: 7, opacity: .7, fill: false } }).addTo(map);
+    L.geoJSON(coast, { ...base, style: { color: col.ink || "#2a2017", weight: 1.1, fillColor: col.land || "#efe5ca", fillOpacity: 1 } }).addTo(map);
   }
-  if (rivers) L.geoJSON(rivers, { interactive: false, style: { color: col.rivers || "#7c8b88", weight: 1.4, opacity: .8 } }).addTo(map);
+  if (rivers) L.geoJSON(rivers, { ...base, style: { color: col.rivers || "#7c8b88", weight: 1.4, opacity: .8 } }).addTo(map);
+  let landT = 0, landRaf = 0;
+  const redrawLand = () => {
+    landRaf = 0;
+    if (!landR._map || map._animatingZoom) return;      // a wheel or pinch zoom animates by itself; leave it be
+    landR._update(); landR._onZoomEnd(); landR._updatePaths();
+    landT = performance.now();
+  };
+  map.on("zoom move", () => {
+    if (landRaf || performance.now() - landT < 80) return;
+    landRaf = requestAnimationFrame(redrawLand);
+  });
 
   (M.labels || []).forEach(l => L.marker([l.lat, l.lng], { interactive: false, keyboard: false,
     icon: L.divIcon({ className: "", html: `<div class="lbl ${l.style === "sea" ? "sea" : "realm"}">${esc(l.text)}</div>`, iconSize: [0, 0] }) }).addTo(map));
