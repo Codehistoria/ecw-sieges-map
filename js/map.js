@@ -148,9 +148,8 @@
     return `<div class="pop">
       ${fig}
       <h3>${esc(d.p)}</h3>
-      <div class="where">${esc(where)}</div>
+      <div class="head-line"><span class="where">${esc(where)}</span><span class="when">${esc(fmtRange(d.s, d.e))}${dur}</span></div>
       ${switcherHTML(members, i)}
-      <div class="when">${esc(fmtRange(d.s, d.e))}${dur}</div>
       ${sides}
       <div class="tags">${out}</div>
       <div class="read">
@@ -326,8 +325,15 @@
     const el = document.createElement("div");
     el.innerHTML = popupHTML(members[i], members, i);
     L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+    // no taller than the map, so the whole pop-up scrolls as one
+    const phone = matchMedia("(max-width: 820px)").matches;
+    g.popup.options.maxHeight = Math.max(220, map.getSize().y - (phone ? 60 : tour && tourOverlaps() ? tourEl.offsetHeight + 130 : 160));
+    if (phone) { g.popup.options.autoPanPaddingTopLeft = [8, 12]; g.popup.options.autoPanPaddingBottomRight = [8, 12]; }
     el.addEventListener("click", e => {
       e.stopPropagation();
+      const fig = e.target.closest("figure");
+      if (fig && e.target.tagName === "IMG") { fig.classList.toggle("big"); g.popup.update(); return; }
       const b = e.target.closest("button"); if (!b) return;
       if (b.dataset.story) { selectStory(b.dataset.story === state.story ? null : b.dataset.story, false); return; }
       if (b.dataset.i != null) showInPopup(g, +b.dataset.i, true);
