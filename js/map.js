@@ -169,28 +169,50 @@
 
   const optionalJSON = async url => { if (!url) return null; try { return JSON.parse((await fetchText(url, "utf-8")).text); } catch (e) { console.warn(e); return null; } };
   const [coast, rivers] = await Promise.all([optionalJSON(cfg.data.coastline), M.showRivers === false ? null : optionalJSON(cfg.data.rivers)]);
-  /* The land is drawn by its own renderer, which keeps a wide margin drawn beyond the edges of the view
-     (padding 1 = one screen-width on every side), so panning doesn't uncover undrawn sea. Leaflet normally
-     only redraws vectors when a move ends, stretching the old drawing during a fly-to; the land is light
-     (about 40 KB), so it is redrawn every few frames while the map flies, keeping it sharp and complete. */
-  const landR = L.svg({ padding: 1 });
+  /* The land is drawn by its own renderer with a wide margin beyond the view (padding 1.5 = one and a half
+     screens on every side), so zooming out by up to two levels, or panning, doesn't uncover undrawn sea. */
+  const landR = L.svg({ padding: 1.5 });
   const base = { interactive: false, renderer: landR, smoothFactor: 1.5 };
   if (coast) {
     L.geoJSON(coast, { ...base, style: { color: "#b9b896", weight: 7, opacity: .7, fill: false } }).addTo(map);
     L.geoJSON(coast, { ...base, style: { color: col.ink || "#2a2017", weight: 1.1, fillColor: col.land || "#efe5ca", fillOpacity: 1 } }).addTo(map);
   }
   if (rivers) L.geoJSON(rivers, { ...base, style: { color: col.rivers || "#7c8b88", weight: 1.4, opacity: .8 } }).addTo(map);
-  /* While a fly-to changes the zoom, Leaflet normally stretches the last drawing of every line (coast, rivers,
-     the story route and the pulsing ring) and redraws only at the end, so lines thicken or thin and then snap back.
-     Instead every line is redrawn at its true size on each frame of the flight (they are light enough), so
-     nothing grows, shrinks or jumps. Wheel and pinch zooms keep Leaflet's own animation. */
-  let lineRaf = 0;
-  const redrawLines = () => {
-    lineRaf = 0;
+  // A long slide can still run past that margin: if it does, the lines are redrawn for the new position
+  // (a plain shift, nothing changes size).
+  map.on("move", () => {
     if (map._animatingZoom) return;
-    [landR, map._renderer].forEach(r => { if (r && r._map) { r._update(); r._onZoomEnd(); r._updatePaths(); } });
+    const tl = map.containerPointToLayerPoint([0, 0]), br = map.containerPointToLayerPoint(map.getSize());
+    [landR, map._renderer].forEach(r => { if (r && r._map && r._bounds && !(r._bounds.contains(tl) && r._bounds.contains(br))) r._update(); });
+  });
+
+  /* Smooth moves. Leaflet's fly-to re-places every label and circle on every frame, which makes them shimmer.
+     Instead the map slides (pan) and scales (zoom) as one picture using the browser's own animation:
+     zooming out happens before the slide, zooming in after it. */
+  let glideN = 0;   // a newer move cancels the remaining steps of an older one
+  function glide(center, zoom, done) {
+    center = L.latLng(center);
+    const me = ++glideN, live = f => () => { if (me === glideN) f(); };
+    const finish = live(() => { if (done) done(); });
+    if (reduceMotion) { map.once("moveend", finish); map.setView(center, zoom, { animate: false }); return; }
+    const pan = then => {
+      const dist = map.latLngToContainerPoint(center).distanceTo(map.getSize().divideBy(2));
+      if (dist < 2) return then();
+      map.once("moveend", live(then));
+      map.panTo(center, { animate: true, duration: Math.min(1.1, 0.4 + dist / 2400), easeLinearity: 0.2 });
+    };
+    const zoomTo = (c, then) => {
+      if (Math.abs(map.getZoom() - zoom) < 0.01) return then();
+      map.once("moveend", live(then));
+      map.setView(c, zoom, { animate: true });
+    };
+    if (zoom < map.getZoom() - 0.01) zoomTo(map.getCenter(), () => pan(finish));
+    else pan(() => zoomTo(center, finish));
+  }
+  const glideBounds = (bounds, opts, done) => {
+    const v = map._getBoundsCenterZoom(L.latLngBounds(bounds), opts || {});
+    glide(v.center, v.zoom, done);
   };
-  map.on("zoom", () => { if (!lineRaf) lineRaf = requestAnimationFrame(redrawLines); });
 
   (M.labels || []).forEach(l => L.marker([l.lat, l.lng], { interactive: false, keyboard: false,
     icon: L.divIcon({ className: "", html: `<div class="lbl ${l.style === "sea" ? "sea" : "realm"}">${esc(l.text)}</div>`, iconSize: [0, 0] }) }).addTo(map));
@@ -569,7 +591,7 @@
     drawRoute(); drawCard();
     if (finished === true) {   // step back to see the whole story
       const vis = storySeq(state.story);
-      if (vis.length) map.flyToBounds(L.latLngBounds(vis.map(d => [d.lat, d.lng])).pad(0.15), { maxZoom: 8, duration: reduceMotion ? 0 : 1 });
+      if (vis.length) glideBounds(L.latLngBounds(vis.map(d => [d.lat, d.lng])).pad(0.15), { maxZoom: 8 });
     }
   }
   function goTo(i) {
@@ -595,11 +617,11 @@
   function showLeg(a, b) {
     const below = tourOverlaps() ? tourEl.offsetHeight + 20 : 0;   // on phones the panel sits under the map instead
     const pad = { paddingTopLeft: [Math.min(150, Math.round(map.getSize().x * 0.3)), 40], paddingBottomRight: [50, below + 30], duration: reduceMotion ? 0 : 1 };
-    if (a && km(a, b) > 1.5) map.flyToBounds(L.latLngBounds([[a.lat, a.lng], [b.lat, b.lng]]), { ...pad, maxZoom: 9 });
+    if (a && km(a, b) > 1.5) glideBounds(L.latLngBounds([[a.lat, a.lng], [b.lat, b.lng]]), { ...pad, maxZoom: 9 });
     else {
       const z = Math.max(map.getZoom(), M.zoomWhenSiegeChosen || 8);
       const c = map.unproject(map.project([b.lat, b.lng], z).add([0, Math.round(below / 2)]), z);
-      map.flyTo(c, z, { duration: pad.duration });
+      glide(c, z);
     }
   }
   function readTourSiege() {
@@ -688,7 +710,7 @@
     drawCard(); drawRoute();
     const filtered = state.story != null || state.year != null || !!state.q || state.sides.size < SIDES.length;
     $("resetAll").classList.toggle("active", filtered);
-    if (fit && vis.length) map.flyToBounds(L.latLngBounds(vis.map(d => [d.lat, d.lng])).pad(0.15), { maxZoom: 8, duration: reduceMotion ? 0 : 0.8 });
+    if (fit && vis.length) glideBounds(L.latLngBounds(vis.map(d => [d.lat, d.lng])).pad(0.15), { maxZoom: 8 });
 
     const longest = vis.filter(d => d.d != null).reduce((a, d) => (!a || d.d > a.d ? d : a), null);
     $("stats").innerHTML = vis.length
@@ -723,8 +745,7 @@
     map.closePopup();
     g.popup.options.autoPanPaddingBottomRight = [24, tour && tourOverlaps() ? tourEl.offsetHeight + 44 : 24];
     g.popup.options.autoPanPaddingTopLeft = [24, 96];
-    map.flyTo([g.lat, g.lng], z, { duration: reduceMotion ? 0 : 0.9 });
-    map.once("moveend", () => { showInPopup(g, g.vis.indexOf(d)); g.marker.openPopup(); });
+    glide([g.lat, g.lng], z, () => { showInPopup(g, g.vis.indexOf(d)); g.marker.openPopup(); });
     if (matchMedia("(max-width: 820px)").matches) document.querySelector(".plate").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   }
 
@@ -834,7 +855,7 @@
     drawGroups();
     try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
     render();
-    map.flyToBounds([[sv.south, sv.west], [sv.north, sv.east]], { padding: [10, 10], duration: reduceMotion ? 0 : 0.8 });
+    glideBounds([[sv.south, sv.west], [sv.north, sv.east]], { padding: [10, 10] });
   };
   render(!!fromHash);
   // open one siege named in the link: index.html?siege=139.2
