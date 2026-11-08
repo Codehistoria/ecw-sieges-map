@@ -391,3 +391,4 @@ path.leg-now { animation: leg-march 1.2s linear infinite; }
 
 /* the slower zoom used when the map glides to a siege or a story step */
 .leaflet-container.glide-zoom .leaflet-zoom-anim .leaflet-zoom-animated { transition: transform .7s cubic-bezier(.45, 0, .25, 1); }
+.views { margin: -10px 0 0; font-family: var(--f-ui); font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }

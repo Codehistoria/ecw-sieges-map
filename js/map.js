@@ -53,6 +53,8 @@
   $("title").innerHTML = `${esc(T.title || "")} <em>${esc(T.titleHighlight || "")}</em>`;
   $("intro").textContent = T.intro || "";
   $("footer").textContent = T.footer || "";
+  // the view counter (js/views.js): counts this visit, and shows the total if the settings allow
+  if (window.SiegeViews && cfg.viewCount) SiegeViews.run(cfg.viewCount, true).then(n => { if (cfg.viewCount.showOnMap !== false) SiegeViews.show($("views"), n, cfg.viewCount); });
   $("search").placeholder = T.searchPlaceholder || "Find a place or county";
   $("compass").style.display = M.showCompass === false ? "none" : "";
   const cart = $("cartouche");

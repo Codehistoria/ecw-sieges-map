@@ -81,6 +81,18 @@
     { "target": "#resetAll", "title": "Show all sieges", "text": "Clears every story, year, side and search and takes you back to the whole map. It stays at the top of the panel as you scroll." }
   ],
 
+  "viewCount": {
+    "_help": "Counts one view per visit and shows the total under the map's footer. service: 'abacus' (no sign-up needed), 'goatcounter' (free account; put its site code in 'goatcounter') or 'none' to switch off. 'showOnMap' false hides the total from visitors (it still shows on the to-do page). countOn: only count on these web addresses (leave empty to count anywhere except a local copy).",
+    "service": "abacus",
+    "namespace": "codehistoria-ecw-sieges-map",
+    "key": "map-views",
+    "goatcounter": "",
+    "countOn": ["codehistoria.github.io"],
+    "showOnMap": true,
+    "since": "November 2026",
+    "label": "Viewed {n} times{since}"
+  },
+
   "tours": {
     "_help": "How a story's tour looks. Each story picks 'visit' or 'route' in the Tour column of data/stories.csv; 'default' is used when that column is empty. The fade settings run from 0 (invisible) to 1 (full strength).",
     "default": "visit",

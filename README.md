@@ -8,6 +8,7 @@ The map reads the spreadsheet and the settings file **every time it loads**, so 
 
 ```
 index.html              the map page
+js/views.js             the view counter
 check.html              data checker: lists problems in the spreadsheet and missing photos
 todo.html               to-do list: what still needs fixing, most important first, with guides
 config/
@@ -63,6 +64,17 @@ A row with no dates, no sides and no outcome (like the "London" introduction row
 `todo.html` lists everything that still needs doing to the data, most important first: things shown wrongly on the map, photo credits, missing photo files, other review points, the checker's automatic findings, and a read-through of each story. It is rebuilt from the data each time it opens, so fixed items drop off by themselves. Ticks are kept in your browser only; the lasting record is the data (and setting a reviewed issue's Status to `Resolved` in `data/known-issues.csv`). It also has step-by-step guides, a caption builder for photo credits, and downloadable lists of the credits and photos still needed.
 
 Any siege can be linked to directly with `index.html?siege=` and its ID, e.g. `index.html?siege=139.2`.
+
+## View counter
+
+The map counts one view per visit and shows the running total under its footer ("Viewed 1,234 times since November 2026"). The to-do page shows it too. Settings are in `config/config.json` under `viewCount`:
+
+- **`service`**: `abacus` (the default) is a free counting service that needs no sign-up and stores only the number, with no cookies and nothing about the visitor. `goatcounter` is a free, privacy-friendly analytics service: create an account at goatcounter.com, put the site code in `goatcounter`, and tick "Allow adding visitor counts on your website" in its settings. It also gives a dashboard of views by day, referring sites (useful for seeing visits from the Civil War Centre's website), countries and devices. `none` switches counting off.
+- **`countOn`**: the web addresses that count. Visits to a local copy are never counted, and a copy hosted elsewhere won't count unless its address is added (or the list is emptied).
+- **`showOnMap`**: `false` hides the total from visitors; it still shows on the to-do page.
+- **`since`** and **`label`**: the wording.
+
+A visitor who reloads or moves around the map counts once; opening it again in a new tab or on another day counts again. A free service can go down: if it can't be reached, the map simply doesn't show the number.
 
 ## Stories
 

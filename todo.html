@@ -63,6 +63,7 @@
 <main>
   <h1>Siege map to-do list</h1>
   <p class="lede">Everything that still needs doing to the map's data, most important first. The list is built from the spreadsheet, the photo folder and the review notes each time this page opens, so once something is fixed in the data it drops off by itself. Tick items as you go: ticks are kept in this browser only, so the lasting record is the data itself (and, for reviewed issues, setting the Status to <b>Resolved</b> in <code>data/known-issues.csv</code>).</p>
+  <p class="lede" id="views" hidden></p>
   <nav><a href="index.html">The map</a><a href="check.html">The data checker</a><a href="#guides">Guides and tools</a><span id="ghLinks"></span></nav>
 
   <div class="progress" aria-live="polite">
@@ -147,7 +148,8 @@
 </main>
 
 <script src="js/vendor/papaparse.min.js"></script>
-<script src="js/data.js?v=20261108-18"></script>
+<script src="js/data.js?v=20261108-19"></script>
+<script src="js/views.js?v=20261108-19"></script>
 <script>
 (async function () {
   "use strict";
@@ -176,6 +178,7 @@
 
   try {
     const cfg = await loadConfig();
+    if (window.SiegeViews && cfg.viewCount) SiegeViews.run(cfg.viewCount, false).then(n => SiegeViews.show($("views"), n, { ...cfg.viewCount, label: "The map has been viewed {n} times{since}." }));
     try { cfg.stories = (await loadStories(cfg)).stories; } catch (e) { cfg.data.stories = null; cfg.stories = (await loadStories(cfg)).stories; }
     const steps = await loadSteps(cfg).catch(() => new Map());
     const { text } = await fetchText(cfg.data.sieges, cfg.data.encoding);
