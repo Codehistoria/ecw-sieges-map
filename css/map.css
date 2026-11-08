@@ -388,3 +388,6 @@ path.leg-now { animation: leg-march 1.2s linear infinite; }
 .help-card .h-next { background: var(--ink) !important; color: var(--paper); }
 .help-card .h-nav button:disabled { opacity: .4; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .help-spot { transition: none; } }
+
+/* the slower zoom used when the map glides to a siege or a story step */
+.leaflet-container.glide-zoom .leaflet-zoom-anim .leaflet-zoom-animated { transition: transform .7s cubic-bezier(.45, 0, .25, 1); }

@@ -187,27 +187,48 @@
   });
 
   /* Smooth moves. Leaflet's fly-to re-places every label and circle on every frame, which makes them shimmer.
-     Instead the map slides (pan) and scales (zoom) as one picture using the browser's own animation:
-     zooming out happens before the slide, zooming in after it. */
+     Instead the map slides (pan) and scales (zoom) as one picture using the browser's own animation, with a
+     slower, gentler zoom than the scroll wheel's. A long move swoops: it pulls back to show both places,
+     slides across, then closes in. Zooming out happens before a slide, zooming in after it. */
+  const GLIDE_ZOOM_MS = 700;
+  // Leaflet ends every zoom animation after a fixed 250 ms; let a glide's zoom run for longer.
+  map._animateZoom = function (center, zoom, startAnim, noUpdate) {
+    if (!this._mapPane) return;
+    if (startAnim) { this._animatingZoom = true; this._animateToCenter = center; this._animateToZoom = zoom; L.DomUtil.addClass(this._mapPane, "leaflet-zoom-anim"); }
+    this.fire("zoomanim", { center, zoom, noUpdate });
+    if (!this._tempFireZoomEvent) this._tempFireZoomEvent = this._zoom !== this._animateToZoom;
+    this._move(this._animateToCenter, this._animateToZoom, undefined, true);
+    setTimeout(L.Util.bind(this._onZoomTransitionEnd, this), this._glideZoom ? GLIDE_ZOOM_MS + 30 : 250);
+  };
   let glideN = 0;   // a newer move cancels the remaining steps of an older one
   function glide(center, zoom, done) {
     center = L.latLng(center);
     const me = ++glideN, live = f => () => { if (me === glideN) f(); };
     const finish = live(() => { if (done) done(); });
     if (reduceMotion) { map.once("moveend", finish); map.setView(center, zoom, { animate: false }); return; }
+    const box = map.getContainer();
+    const zoomTo = (c, z, then) => {
+      if (Math.abs(map.getZoom() - z) < 0.01) return then();
+      map._glideZoom = true; box.classList.add("glide-zoom");
+      map.once("moveend", () => { map._glideZoom = false; box.classList.remove("glide-zoom"); live(then)(); });
+      map.setView(c, z, { animate: true });
+    };
     const pan = then => {
       const dist = map.latLngToContainerPoint(center).distanceTo(map.getSize().divideBy(2));
       if (dist < 2) return then();
       map.once("moveend", live(then));
-      map.panTo(center, { animate: true, duration: Math.min(1.1, 0.4 + dist / 2400), easeLinearity: 0.2 });
+      map.panTo(center, { animate: true, duration: Math.min(1.8, 0.9 + dist / 1400), easeLinearity: 0.15 });
     };
-    const zoomTo = (c, then) => {
-      if (Math.abs(map.getZoom() - zoom) < 0.01) return then();
-      map.once("moveend", live(then));
-      map.setView(c, zoom, { animate: true });
-    };
-    if (zoom < map.getZoom() - 0.01) zoomTo(map.getCenter(), () => pan(finish));
-    else pan(() => zoomTo(center, finish));
+    // the swoop: if the new place is more than about a screen away, first pull back far enough to see both
+    const size = map.getSize(), far = map.latLngToContainerPoint(center).distanceTo(size.divideBy(2)) > Math.min(size.x, size.y) * 0.75;
+    const lowest = Math.min(map.getZoom(), zoom);
+    let pull = lowest;
+    if (far) {
+      const both = L.latLngBounds([map.getCenter(), center]);
+      pull = Math.max(map.getMinZoom(), Math.min(lowest - 0.5, map.getBoundsZoom(both, false, L.point(size.x * 0.25, size.y * 0.25))));
+    }
+    if (pull < map.getZoom() - 0.01) zoomTo(far ? L.latLngBounds([map.getCenter(), center]).getCenter() : map.getCenter(), pull, () => pan(() => zoomTo(center, zoom, finish)));
+    else pan(() => zoomTo(center, zoom, finish));
   }
   const glideBounds = (bounds, opts, done) => {
     const v = map._getBoundsCenterZoom(L.latLngBounds(bounds), opts || {});
