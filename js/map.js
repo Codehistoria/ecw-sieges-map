@@ -180,17 +180,17 @@
     L.geoJSON(coast, { ...base, style: { color: col.ink || "#2a2017", weight: 1.1, fillColor: col.land || "#efe5ca", fillOpacity: 1 } }).addTo(map);
   }
   if (rivers) L.geoJSON(rivers, { ...base, style: { color: col.rivers || "#7c8b88", weight: 1.4, opacity: .8 } }).addTo(map);
-  let landT = 0, landRaf = 0;
-  const redrawLand = () => {
-    landRaf = 0;
-    if (!landR._map || map._animatingZoom) return;      // a wheel or pinch zoom animates by itself; leave it be
-    landR._update(); landR._onZoomEnd(); landR._updatePaths();
-    landT = performance.now();
+  /* While a fly-to changes the zoom, Leaflet normally stretches the last drawing of every line (coast, rivers,
+     the story route and the pulsing ring) and redraws only at the end, so lines thicken or thin and then snap back.
+     Instead every line is redrawn at its true size on each frame of the flight (they are light enough), so
+     nothing grows, shrinks or jumps. Wheel and pinch zooms keep Leaflet's own animation. */
+  let lineRaf = 0;
+  const redrawLines = () => {
+    lineRaf = 0;
+    if (map._animatingZoom) return;
+    [landR, map._renderer].forEach(r => { if (r && r._map) { r._update(); r._onZoomEnd(); r._updatePaths(); } });
   };
-  map.on("zoom move", () => {
-    if (landRaf || performance.now() - landT < 80) return;
-    landRaf = requestAnimationFrame(redrawLand);
-  });
+  map.on("zoom", () => { if (!lineRaf) lineRaf = requestAnimationFrame(redrawLines); });
 
   (M.labels || []).forEach(l => L.marker([l.lat, l.lng], { interactive: false, keyboard: false,
     icon: L.divIcon({ className: "", html: `<div class="lbl ${l.style === "sea" ? "sea" : "realm"}">${esc(l.text)}</div>`, iconSize: [0, 0] }) }).addTo(map));
